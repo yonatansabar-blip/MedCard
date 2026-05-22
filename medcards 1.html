@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedCards</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--surface:#fff;--accent:#2d4eaa;--accent2:#4a6fd4;--accent-light:#e8eefb;--accent-mid:#c5d3f5;--dark:#1a2a5e;--text:#1a2a5e;--muted:#7080a8;--red:#c53030;--orange:#c05621;--green:#1e7a3a;--border:rgba(45,78,170,0.13);--shadow:0 2px 14px rgba(45,78,170,0.09);}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#fff;font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 15% 0%,rgba(45,78,170,.04) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 85% 100%,rgba(74,111,212,.03) 0%,transparent 60%);pointer-events:none;z-index:0;}
+.app{position:relative;z-index:1;}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.95);backdrop-filter:blur(14px);position:sticky;top:0;z-index:100;box-shadow:0 1px 10px rgba(45,78,170,.07);gap:12px;flex-wrap:wrap;}
+.logo{font-family:'Nunito',sans-serif;font-size:1.5rem;font-weight:900;letter-spacing:-.3px;display:flex;align-items:center;gap:9px;flex-shrink:0;direction:ltr;}
+.logo-icon{width:34px;height:34px;border-radius:9px;overflow:hidden;flex-shrink:0;}
+.logo-icon img{width:100%;height:100%;object-fit:cover;}
+.logo-wordmark{letter-spacing:-.5px;display:flex;}
+.logo-med{color:#2d4eaa;}.logo-cards{color:#1a2a5e;}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.tabs{display:flex;gap:3px;background:#edf1fb;border-radius:12px;padding:4px;}
+.tab{padding:7px 11px;border-radius:9px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.8rem;transition:all .2s;white-space:nowrap;}
+.tab.active{background:var(--accent);color:white;box-shadow:0 2px 8px rgba(45,78,170,.28);}
+.lang-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;background:#edf1fb;border:1px solid var(--border);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);transition:all .2s;position:relative;flex-shrink:0;}
+.lang-btn:hover{background:var(--accent-light);border-color:var(--accent);}
+.lang-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:0;background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(45,78,170,.13);overflow:hidden;z-index:200;min-width:155px;}
+.lang-dropdown.open{display:block;animation:fadeUp .15s ease;}
+.lang-option{display:flex;align-items:center;gap:9px;padding:10px 15px;cursor:pointer;font-size:.88rem;transition:background .15s;}
+.lang-option:hover{background:var(--accent-light);}
+.lang-option.active{background:var(--accent-light);color:var(--accent);font-weight:600;}
+
+main{padding:24px 32px;max-width:920px;margin:0 auto;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;animation:fadeUp .5s ease both;}
+.stat-card{background:white;border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;box-shadow:var(--shadow);}
+.stat-num{font-family:'Nunito',sans-serif;font-size:1.9rem;font-weight:800;background:linear-gradient(135deg,#2d4eaa,#4a6fd4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-label{font-size:.7rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;}
+
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.section-title{font-family:'Nunito',sans-serif;font-size:1.3rem;font-weight:800;color:var(--text);}
+
+/* URGENT */
+.urgent-banner{background:linear-gradient(135deg,#fff3cd,#fef9e7);border:1px solid #f6c23e;border-radius:13px;padding:13px 18px;margin-bottom:18px;display:none;gap:12px;align-items:center;}
+.urgent-banner.show{display:flex;animation:fadeUp .4s ease both;}
+.urgent-title{font-weight:600;font-size:.88rem;color:#7d5a00;}
+.urgent-sub{font-size:.76rem;color:#a07800;margin-top:2px;}
+.urgent-go{padding:6px 14px;background:#f6c23e;border:none;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;color:#5a3e00;transition:background .2s;}
+.urgent-go:hover{background:#e0b030;}
+
+/* DECK SELECTOR */
+.deck-selector{background:white;border:1px solid var(--border);border-radius:13px;padding:15px 20px;margin-bottom:20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;animation:fadeUp .4s ease both;}
+.deck-selector label{font-size:.78rem;color:var(--muted);white-space:nowrap;text-transform:uppercase;letter-spacing:.5px;}
+.deck-selector select{flex:1;background:#edf1fb;border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;cursor:pointer;}
+.deck-selector select:focus{border-color:var(--accent);}
+.active-deck-badge{display:inline-flex;align-items:center;gap:5px;background:var(--accent-light);color:var(--accent);border-radius:99px;padding:3px 11px;font-size:.76rem;font-weight:600;border:1px solid rgba(45,78,170,.18);}
+
+/* FLASHCARD */
+.study-area{animation:fadeUp .5s .1s ease both;}
+.flip-hint{text-align:center;font-size:.76rem;color:var(--muted);margin-bottom:10px;}
+.flashcard-container{perspective:1200px;height:290px;margin-bottom:20px;cursor:pointer;}
+.flashcard{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);}
+.flashcard.flipped{transform:rotateY(180deg);}
+.card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;}
+.card-front{background:white;border:1px solid var(--border);box-shadow:0 4px 22px rgba(45,78,170,.09);}
+.card-back{background:linear-gradient(135deg,#e8eefb,#f0f4ff);border:1px solid rgba(45,78,170,.22);box-shadow:0 4px 22px rgba(45,78,170,.12);transform:rotateY(180deg);}
+.card-tag{font-size:.67rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:13px;background:var(--accent-light);padding:3px 11px;border-radius:99px;border:1px solid rgba(45,78,170,.15);}
+.card-question{font-family:'Nunito',sans-serif;font-size:1.3rem;font-weight:700;line-height:1.4;color:var(--text);}
+.card-answer{font-size:1rem;line-height:1.7;color:var(--dark);}
+.card-hint{font-size:.74rem;color:var(--muted);margin-top:13px;}
+.card-progress{font-size:.7rem;color:var(--muted);position:absolute;top:14px;left:14px;}
+.controls{display:flex;gap:10px;justify-content:center;margin-bottom:24px;}
+.ctrl-btn{padding:11px 22px;border-radius:11px;border:none;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:all .2s;}
+.btn-again{background:#fff5f5;color:var(--red);border:1px solid rgba(197,48,48,.22);}
+.btn-again:hover{background:#fed7d7;}
+.btn-hard{background:#fffaf0;color:var(--orange);border:1px solid rgba(192,86,33,.22);}
+.btn-hard:hover{background:#feebc8;}
+.btn-good{background:var(--accent-light);color:var(--accent);border:1px solid rgba(45,78,170,.22);}
+.btn-good:hover{background:var(--accent-mid);}
+.btn-easy{background:#e8f5e9;color:var(--green);border:1px solid rgba(30,122,58,.22);}
+.btn-easy:hover{background:#c6f6d5;}
+
+/* DAILY */
+.daily-header-card{background:linear-gradient(135deg,#2d4eaa,#4a6fd4);border-radius:16px;padding:22px 26px;margin-bottom:24px;color:white;box-shadow:0 4px 22px rgba(45,78,170,.32);animation:fadeUp .5s ease both;}
+.daily-greeting{font-size:.78rem;opacity:.75;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.daily-title{font-family:'Nunito',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:10px;}
+.daily-progress-bar-wrap{background:rgba(255,255,255,.22);border-radius:99px;height:7px;margin-bottom:5px;}
+.daily-progress-bar{background:white;border-radius:99px;height:7px;transition:width .6s ease;}
+.daily-progress-label{font-size:.73rem;opacity:.78;}
+.daily-section-title{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:11px;display:flex;align-items:center;gap:6px;}
+.priority-list{display:flex;flex-direction:column;gap:10px;margin-bottom:26px;animation:fadeUp .5s .1s ease both;}
+.priority-item{background:white;border:1px solid var(--border);border-radius:13px;padding:15px 18px;display:flex;align-items:center;gap:13px;box-shadow:var(--shadow);cursor:pointer;transition:all .2s;}
+.priority-item:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(45,78,170,.13);}
+.priority-icon{font-size:1.45rem;}
+.priority-info{flex:1;}
+.priority-name{font-weight:700;font-size:.92rem;margin-bottom:3px;font-family:'Nunito',sans-serif;}
+.priority-reason{font-size:.76rem;color:var(--muted);}
+.priority-badge{padding:3px 10px;border-radius:99px;font-size:.7rem;font-weight:700;white-space:nowrap;}
+.badge-urgent{background:#fff0f0;color:#c53030;border:1px solid rgba(197,48,48,.2);}
+.badge-soon{background:#fff8f0;color:#c05621;border:1px solid rgba(192,86,33,.2);}
+.badge-normal{background:var(--accent-light);color:var(--accent);border:1px solid rgba(45,78,170,.2);}
+.start-daily-btn{display:block;width:100%;padding:13px;background:linear-gradient(135deg,#2d4eaa,#4a6fd4);border:none;border-radius:12px;color:white;font-family:'Nunito',sans-serif;font-size:.98rem;font-weight:800;cursor:pointer;box-shadow:0 3px 14px rgba(45,78,170,.3);margin-top:4px;animation:fadeUp .5s .2s ease both;transition:opacity .2s;}
+.start-daily-btn:hover{opacity:.88;}
+.no-priority{text-align:center;padding:28px;color:var(--muted);background:white;border-radius:13px;border:1px solid var(--border);font-size:.88rem;}
+
+/* DECKS */
+.import-btn{padding:8px 16px;background:var(--accent-light);color:var(--accent);border:1px solid rgba(45,78,170,.2);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.import-btn:hover{background:var(--accent-mid);}
+.decks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:14px;animation:fadeUp .5s .1s ease both;}
+.deck-card{background:white;border:1px solid var(--border);border-radius:15px;padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;box-shadow:var(--shadow);}
+.deck-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2d4eaa,#4a6fd4);opacity:0;transition:opacity .2s;}
+.deck-card:hover{border-color:rgba(45,78,170,.32);transform:translateY(-2px);box-shadow:0 6px 22px rgba(45,78,170,.13);}
+.deck-card:hover::before{opacity:1;}
+.deck-icon{font-size:1.7rem;margin-bottom:10px;}
+.deck-name{font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;margin-bottom:5px;color:var(--text);}
+.deck-count{font-size:.76rem;color:var(--muted);}
+.deck-due{display:inline-block;margin-top:8px;font-size:.71rem;background:var(--accent-light);color:var(--accent);padding:2px 9px;border-radius:99px;border:1px solid rgba(45,78,170,.15);}
+.deck-practice-btn{display:block;width:100%;margin-top:12px;padding:7px;background:linear-gradient(135deg,#2d4eaa,#4a6fd4);border:none;border-radius:9px;color:white;font-family:'DM Sans',sans-serif;font-size:.79rem;font-weight:500;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 7px rgba(45,78,170,.22);}
+.deck-practice-btn:hover{opacity:.86;}
+.deck-share-btn{display:block;width:100%;margin-top:7px;padding:6px;background:var(--accent-light);border:1px solid rgba(45,78,170,.18);border-radius:8px;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:.77rem;font-weight:500;cursor:pointer;transition:background .2s;}
+.deck-share-btn:hover{background:var(--accent-mid);}
+
+/* EXAMS */
+.add-exam-box{background:white;border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:24px;box-shadow:var(--shadow);animation:fadeUp .5s ease both;}
+.add-exam-title{font-size:.8rem;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:15px;display:flex;align-items:center;gap:7px;}
+.add-exam-title::before{content:'📅';font-size:.9rem;}
+.exam-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px;}
+.exam-field{display:flex;flex-direction:column;gap:5px;}
+.exam-field label{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.exam-input,.exam-deck-select{background:#f4f7ff;border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;width:100%;max-width:100%;box-sizing:border-box;}
+input[type="date"].exam-input{-webkit-appearance:none;appearance:none;display:block;}
+.exam-input:focus,.exam-deck-select:focus{border-color:var(--accent);background:white;}
+.add-exam-btn{padding:9px 22px;background:linear-gradient(135deg,#2d4eaa,#4a6fd4);border:none;border-radius:10px;color:white;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(45,78,170,.25);transition:opacity .2s,transform .1s;}
+.add-exam-btn:hover{opacity:.9;transform:translateY(-1px);}
+.exams-list{display:flex;flex-direction:column;gap:12px;animation:fadeUp .5s .1s ease both;}
+.exam-item{background:white;border:1px solid var(--border);border-radius:14px;padding:17px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:15px;position:relative;overflow:hidden;}
+.exam-item::before{content:'';position:absolute;right:0;top:0;bottom:0;width:4px;border-radius:0 14px 14px 0;}
+.exam-item.urgent::before{background:#c53030;}
+.exam-item.soon::before{background:#c05621;}
+.exam-item.normal::before{background:#2d4eaa;}
+.exam-countdown{min-width:62px;text-align:center;}
+.exam-days-num{font-family:'Nunito',sans-serif;font-size:1.8rem;font-weight:800;line-height:1;}
+.exam-days-num.urgent{color:#c53030;}.exam-days-num.soon{color:#c05621;}.exam-days-num.normal{color:#2d4eaa;}
+.exam-days-label{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.exam-info{flex:1;}
+.exam-name{font-family:'Nunito',sans-serif;font-size:1.02rem;font-weight:800;margin-bottom:4px;}
+.exam-meta{font-size:.76rem;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.exam-deck-tag{background:var(--accent-light);color:var(--accent);padding:2px 9px;border-radius:99px;font-size:.7rem;border:1px solid rgba(45,78,170,.15);font-weight:600;}
+.exam-actions{display:flex;gap:7px;}
+.exam-study-btn{padding:7px 14px;background:linear-gradient(135deg,#2d4eaa,#4a6fd4);border:none;border-radius:9px;color:white;font-size:.78rem;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(45,78,170,.22);white-space:nowrap;transition:opacity .2s;}
+.exam-study-btn:hover{opacity:.84;}
+.exam-delete-btn{padding:7px 10px;background:#fff5f5;border:1px solid rgba(197,48,48,.18);border-radius:9px;color:#c53030;font-size:.8rem;cursor:pointer;transition:background .2s;}
+.exam-delete-btn:hover{background:#fed7d7;}
+.no-exams{text-align:center;padding:40px 20px;color:var(--muted);font-size:.9rem;background:white;border-radius:14px;border:1px solid var(--border);}
+
+/* HOME */
+.home-hero{background:linear-gradient(135deg,#2d4eaa,#4a6fd4);border-radius:16px;padding:22px 26px;margin-bottom:22px;color:white;box-shadow:0 6px 28px rgba(45,78,170,.28);animation:fadeUp .5s ease both;}
+.home-date{font-size:.75rem;opacity:.7;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.home-quote{font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:700;line-height:1.45;margin-bottom:6px;}
+.home-quote-attr{font-size:.73rem;opacity:.65;margin-bottom:16px;}
+.streak-row{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.15);border-radius:14px;padding:14px 18px;}
+.streak-flame{font-size:2rem;}
+.streak-info{flex:1;}
+.streak-num{font-family:'Nunito',sans-serif;font-size:2rem;font-weight:900;line-height:1;}
+.streak-label{font-size:.75rem;opacity:.8;margin-top:2px;}
+.streak-bar-wrap{flex:1;background:rgba(255,255,255,.2);border-radius:99px;height:6px;margin-top:6px;}
+.streak-bar{background:white;border-radius:99px;height:6px;transition:width .8s ease;}
+.streak-goal{font-size:.7rem;opacity:.7;margin-top:3px;}
+.home-today-box{background:white;border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:18px;box-shadow:var(--shadow);animation:fadeUp .5s .1s ease both;}
+.home-today-title{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:13px;display:flex;align-items:center;gap:6px;}
+.today-deck-list{display:flex;flex-direction:column;gap:9px;}
+.today-deck-item{display:flex;align-items:center;gap:11px;padding:10px 14px;background:var(--accent-light);border-radius:11px;cursor:pointer;transition:all .2s;}
+.today-deck-item:hover{background:var(--accent-mid);}
+.today-deck-icon{font-size:1.3rem;}
+.today-deck-info{flex:1;}
+.today-deck-name{font-weight:700;font-size:.9rem;font-family:'Nunito',sans-serif;}
+.today-deck-sub{font-size:.74rem;color:var(--accent2);margin-top:1px;}
+.today-deck-arrow{color:var(--accent);font-size:.9rem;}
+.home-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px;animation:fadeUp .5s .2s ease both;}
+.home-btn{border:none;border-radius:15px;padding:18px 14px;cursor:pointer;transition:all .2s;text-align:center;font-family:'Nunito',sans-serif;}
+.home-btn:hover{transform:translateY(-2px);}
+.home-btn-primary{background:linear-gradient(135deg,#2d4eaa,#4a6fd4);color:white;box-shadow:0 4px 16px rgba(45,78,170,.28);}
+.home-btn-secondary{background:white;color:var(--text);border:1.5px solid var(--border);box-shadow:var(--shadow);}
+.home-btn-icon{font-size:1.6rem;margin-bottom:7px;}
+.home-btn-title{font-size:.95rem;font-weight:800;margin-bottom:3px;}
+.home-btn-sub{font-size:.72rem;opacity:.7;font-family:'DM Sans',sans-serif;font-weight:400;}
+.home-btn-secondary .home-btn-sub{color:var(--muted);}
+
+/* CREATE / AI */
+.create-mode-tabs{display:flex;gap:4px;background:#edf1fb;border-radius:12px;padding:4px;margin-bottom:18px;}
+.create-tab{flex:1;padding:9px;border-radius:9px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;transition:all .2s;}
+.create-tab.active{background:var(--accent);color:white;box-shadow:0 2px 8px rgba(45,78,170,.25);}
+.create-panel{animation:fadeUp .3s ease both;}
+.manual-field label{display:block;font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+.input-type-row{display:flex;gap:6px;margin-bottom:12px;}
+.input-type-btn{flex:1;padding:8px 6px;border-radius:9px;border:1px solid var(--border);background:white;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.8rem;cursor:pointer;transition:all .2s;text-align:center;}
+.input-type-btn.active{background:var(--accent-light);color:var(--accent);border-color:rgba(45,78,170,.3);font-weight:600;}
+.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#fafbff;}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-light);}
+.upload-icon{font-size:2rem;margin-bottom:8px;}
+.upload-text{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:4px;}
+.upload-sub{font-size:.75rem;color:var(--muted);}
+.ai-box{background:white;border:1px solid var(--border);border-radius:17px;padding:24px;margin-bottom:26px;box-shadow:var(--shadow);animation:fadeUp .5s .1s ease both;}
+.ai-box-title{font-size:.8rem;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.ai-box-title::before{content:'✦';color:#d69e2e;}
+.ai-textarea{width:100%;background:#f4f7ff;border:1px solid var(--border);border-radius:11px;padding:13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;resize:none;min-height:95px;outline:none;transition:border-color .2s;}
+.ai-textarea:focus{border-color:var(--accent);background:white;}
+.ai-textarea::placeholder{color:#a0aac8;}
+.ai-btn{margin-top:12px;padding:10px 24px;background:linear-gradient(135deg,#2d4eaa,#4a6fd4);border:none;border-radius:11px;color:white;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 3px 11px rgba(45,78,170,.3);transition:opacity .2s,transform .1s;}
+.ai-btn:hover{opacity:.9;transform:translateY(-1px);}
+.ai-btn.loading{opacity:.7;pointer-events:none;}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;display:none;}
+.ai-btn.loading .spinner{display:block;}
+.generated-cards{display:none;flex-direction:column;gap:10px;margin-top:13px;}
+.generated-cards.visible{display:flex;}
+.gen-card{background:white;border:1px solid var(--border);border-radius:11px;padding:13px 17px;display:flex;justify-content:space-between;align-items:flex-start;gap:13px;animation:fadeUp .4s ease both;box-shadow:var(--shadow);}
+.gen-card-text{flex:1;}
+.gen-card-q{font-weight:600;margin-bottom:4px;font-size:.9rem;color:var(--text);}
+.gen-card-a{color:var(--muted);font-size:.8rem;}
+.gen-card-add{background:var(--accent-light);color:var(--accent);border:1px solid rgba(45,78,170,.22);border-radius:8px;padding:5px 12px;font-size:.77rem;cursor:pointer;white-space:nowrap;transition:background .2s;}
+.gen-card-add:hover{background:var(--accent-mid);}
+.gen-card-add.added{opacity:.6;pointer-events:none;}
+.deck-add-row{display:flex;gap:7px;margin-top:12px;}
+.deck-add-btn{flex:1;padding:7px 4px;border-radius:9px;border:1px solid var(--border);background:#f4f7ff;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;}
+.deck-add-btn:hover{background:var(--accent-light);border-color:var(--accent);}
+.deck-add-btn.primary{background:linear-gradient(135deg,#2d4eaa,#4a6fd4);color:white;border-color:transparent;box-shadow:0 2px 7px rgba(45,78,170,.22);}
+.deck-add-btn.primary:hover{opacity:.88;}
+.emoji-opt{font-size:1.4rem;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .15s;}
+.emoji-opt:hover{background:var(--accent-mid);}
+
+.page{display:none;}
+.page.active{display:block;}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:white;padding:10px 22px;border-radius:11px;font-size:.86rem;font-weight:500;transition:transform .3s;z-index:999;box-shadow:0 4px 16px rgba(45,78,170,.3);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(15px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes bubble-pop{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
+@media(max-width:640px){
+  nav{padding:11px 14px;}
+  .tabs .tab{padding:6px 7px;font-size:.72rem;}
+  main{padding:14px;}
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .controls{flex-wrap:wrap;}
+  .ctrl-btn{flex:1;min-width:60px;padding:9px 5px;font-size:.78rem;}
+  .exam-form-grid{grid-template-columns:1fr;}
+  .exam-item{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<nav>
+  <div class="logo">
+    <img src="data:image/png;base64,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" width="36" height="36" style="border-radius:9px;flex-shrink:0;" alt="MedCards"/>
+    <div style="direction:ltr;display:flex;letter-spacing:-.5px;font-family:'Nunito',sans-serif;font-size:1.5rem;font-weight:900;"><span style="color:#2d4eaa;">med</span><span style="color:#111;">cards</span></div>
+  </div>
+  <div class="nav-right">
+    <div class="tabs">
+      <button class="tab active" data-page="home" data-i18n="tab_home">בית</button>
+      <button class="tab" data-page="study" data-i18n="tab_study">לימוד</button>
+      <button class="tab" data-page="daily" data-i18n="tab_daily">יומי</button>
+      <button class="tab" data-page="decks" data-i18n="tab_decks">חפיסות</button>
+      <button class="tab" data-page="exams" data-i18n="tab_exams">מבחנים</button>
+      <button class="tab" data-page="ai">AI ✦</button>
+    </div>
+    <div style="position:relative">
+      <button class="lang-btn" onclick="toggleLangMenu()" id="lang-btn">
+        <span id="lang-flag">🇮🇱</span><span id="lang-label">עב</span><span style="font-size:.62rem;color:var(--muted)">▾</span>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown">
+        <div class="lang-option active" onclick="setLang('he')"><span>🇮🇱</span> עברית</div>
+        <div class="lang-option" onclick="setLang('en')"><span>🇬🇧</span> English</div>
+        <div class="lang-option" onclick="setLang('it')"><span>🇮🇹</span> Italiano</div>
+        <div class="lang-option" onclick="setLang('es')"><span>🇪🇸</span> Español</div>
+        <div class="lang-option" onclick="setLang('ru')"><span>🇷🇺</span> Русский</div>
+      </div>
+    </div>
+  </div>
+</nav>
+<main>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+
+  <!-- Streak<!-- Streak<!-- Streak + Quote hero -->
+  <div class="home-hero">
+    <div class="home-date" id="home-date"></div>
+    <div class="home-quote" id="home-quote"></div>
+    <div class="home-quote-attr" id="home-quote-attr"></div>
+    <div class="streak-row">
+      <div class="streak-flame">🔥</div>
+      <div class="streak-info">
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div class="streak-num" id="streak-num">7</div>
+          <div class="streak-label" id="streak-label-el">ימים ברצף</div>
+        </div>
+        <div class="streak-bar-wrap"><div class="streak-bar" id="streak-bar" style="width:70%"></div></div>
+        <div class="streak-goal" id="streak-goal"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two action buttons -->
+  <div class="home-btns">
+    <button class="home-btn home-btn-primary" onclick="startStructuredStudy()">
+      <div class="home-btn-icon">🎯</div>
+      <div class="home-btn-title" data-i18n="btn_structured">תרגול מתוכנן</div>
+      <div class="home-btn-sub" data-i18n="btn_structured_sub">לפי מבחנים קרובים</div>
+    </button>
+    <button class="home-btn home-btn-secondary" onclick="showPage('decks')">
+      <div class="home-btn-icon">✨</div>
+      <div class="home-btn-title" data-i18n="btn_free">תרגול חופשי</div>
+      <div class="home-btn-sub" data-i18n="btn_free_sub">בחר חפיסה בעצמך</div>
+    </button>
+  </div>
+
+</div>
+
+<!-- STUDY -->
+<div class="page" id="page-study">
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num" id="stat-today">0</div><div class="stat-label" data-i18n="stat_today">היום</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-streak">7</div><div class="stat-label" data-i18n="stat_streak">ימי רצף</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label" data-i18n="stat_total">סה"כ קלפים</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-pct">--</div><div class="stat-label" data-i18n="stat_pct">אחוז הצלחה</div></div>
+  </div>
+  <div class="urgent-banner" id="urgent-banner">
+    <div style="font-size:1.3rem">⚠️</div>
+    <div style="flex:1"><div class="urgent-title" id="urgent-title"></div><div class="urgent-sub" id="urgent-sub"></div></div>
+    <button class="urgent-go" id="urgent-go-btn" onclick="goUrgentStudy()">תרגל עכשיו</button>
+  </div>
+  <div class="deck-selector">
+    <label data-i18n="deck_label">חפיסה:</label>
+    <select id="deck-select" onchange="changeDeck()">
+      <option value="all" data-i18n="deck_all">כל הקלפים</option>
+      <option value="pharma" data-i18n="deck_pharma">💊 פרמקולוגיה</option>
+      <option value="cardio" data-i18n="deck_cardio">🫀 קרדיולוגיה</option>
+      <option value="neuro" data-i18n="deck_neuro">🧠 נוירולוגיה</option>
+      <option value="micro" data-i18n="deck_micro">🦠 מיקרוביולוגיה</option>
+      <option value="hemo" data-i18n="deck_hemo">🩸 המטולוגיה</option>
+          <option value="anatomy" data-i18n="deck_anatomy">🦴 אנטומיה</option>
+    </select>
+    <div class="active-deck-badge" id="active-badge">✦ </div>
+  </div>
+  <div class="study-area">
+    <div id="no-deck-msg" style="text-align:center;padding:40px 20px;color:var(--muted);background:white;border:1px solid var(--border);border-radius:16px;margin-bottom:20px;box-shadow:var(--shadow);">
+      <div style="font-size:2.5rem;margin-bottom:12px">🃏</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:6px;" id="no-deck-title">בחר חפיסה כדי להתחיל</div>
+      <div style="font-size:.85rem;" id="no-deck-sub">בחר חפיסה מהרשימה למעלה</div>
+    </div>
+    <div id="study-content" style="display:none">
+    <p class="flip-hint" data-i18n="flip_hint">לחץ על הקלף להפוך</p>
+    <div class="flashcard-container" onclick="flipCard()">
+      <div class="flashcard" id="flashcard">
+        <div class="card-face card-front">
+          <span class="card-progress" id="card-progress">1/1</span>
+          <div class="card-tag" id="card-tag"></div>
+          <div class="card-question" id="card-question"></div>
+          <div class="card-hint" data-i18n="card_hint">לחץ לראות תשובה</div>
+        </div>
+        <div class="card-face card-back">
+          <span class="card-progress" id="card-progress2">1/1</span>
+          <div class="card-tag" data-i18n="answer_label">תשובה</div>
+          <div class="card-answer" id="card-answer"></div>
+        </div>
+      </div>
+    </div>
+    <div class="controls" id="controls" style="display:none">
+      <button class="ctrl-btn btn-again" onclick="nextCard('again')" data-i18n="btn_again">שוב</button>
+      <button class="ctrl-btn btn-hard" onclick="nextCard('hard')" data-i18n="btn_hard">קשה</button>
+      <button class="ctrl-btn btn-good" onclick="nextCard('good')" data-i18n="btn_good">טוב</button>
+      <button class="ctrl-btn btn-easy" onclick="nextCard('easy')" data-i18n="btn_easy">קל</button>
+    </div>
+    </div><!-- end study-content -->
+  </div>
+</div>
+
+<!-- DAILY -->
+<div class="page" id="page-daily">
+  <div class="daily-header-card">
+    <div class="daily-greeting" data-i18n="daily_greeting">תרגול יומי</div>
+    <div class="daily-title" id="daily-title-text">מה ללמוד היום?</div>
+    <div class="daily-progress-bar-wrap"><div class="daily-progress-bar" id="daily-bar" style="width:0%"></div></div>
+    <div class="daily-progress-label" id="daily-progress-label">0 / 0</div>
+  </div>
+  <div class="daily-section-title"><span>🎯</span> <span data-i18n="priority_title">עדיפות לימוד לפי מבחנים קרובים</span></div>
+  <div class="priority-list" id="priority-list"></div>
+  <button class="start-daily-btn" onclick="startDailySession()" data-i18n="start_daily_btn">▶ התחל תרגול יומי</button>
+</div>
+
+<!-- DECKS -->
+<div class="page" id="page-decks">
+  <div class="section-header">
+    <div class="section-title" data-i18n="my_decks">החפיסות שלי</div>
+    <button class="import-btn" onclick="triggerImport()" data-i18n="import_deck_btn">📥 ייבא</button>
+  </div>
+  <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importDeck(this)"/>
+  <div class="decks-grid" id="decks-grid"></div>
+</div>
+
+<!-- EXAMS -->
+<div class="page" id="page-exams">
+  <div class="section-header"><div class="section-title" data-i18n="exams_title">המבחנים שלי</div></div>
+  <div class="add-exam-box">
+    <div class="add-exam-title" data-i18n="add_exam_title">הוסף מבחן חדש</div>
+    <div class="exam-form-grid">
+      <div class="exam-field"><label data-i18n="exam_name_label">שם המבחן</label><input class="exam-input" id="exam-name-input" type="text" data-i18n-placeholder="exam_name_ph" placeholder="לדוגמה: פרמקולוגיה מודול 2"/></div>
+      <div class="exam-field"><label data-i18n="exam_date_label">תאריך המבחן</label><input class="exam-input" id="exam-date-input" type="date"/></div>
+      <div class="exam-field"><label data-i18n="exam_deck_label">חפיסה קשורה</label>
+        <select class="exam-deck-select" id="exam-deck-input">
+          <option value="pharma" data-i18n="deck_pharma">💊 פרמקולוגיה</option>
+          <option value="cardio" data-i18n="deck_cardio">🫀 קרדיולוגיה</option>
+          <option value="neuro" data-i18n="deck_neuro">🧠 נוירולוגיה</option>
+          <option value="micro" data-i18n="deck_micro">🦠 מיקרוביולוגיה</option>
+          <option value="hemo" data-i18n="deck_hemo">🩸 המטולוגיה</option>
+          <option value="anatomy" data-i18n="deck_anatomy">🦴 אנטומיה</option>
+          <option value="all" data-i18n="deck_all">כל הקלפים</option>
+        </select>
+      </div>
+      <div class="exam-field"><label data-i18n="exam_notes_label">הערות</label><input class="exam-input" id="exam-notes-input" type="text" data-i18n-placeholder="exam_notes_ph" placeholder="פרטים נוספים..."/></div>
+    </div>
+    <button class="add-exam-btn" onclick="addExam()" data-i18n="add_exam_btn">+ הוסף מבחן</button>
+  </div>
+  <div class="daily-section-title"><span>📋</span> <span data-i18n="upcoming_exams">מבחנים קרובים</span></div>
+  <div class="exams-list" id="exams-list"></div>
+</div>
+
+<!-- AI / CREATE -->
+<div class="page" id="page-ai">
+  <div class="section-header"><div class="section-title" data-i18n="ai_title">יצירת קלפים ✦</div></div>
+  <div class="create-mode-tabs">
+    <button class="create-tab active" id="ctab-manual" onclick="switchCreateTab('manual')" data-i18n="ctab_manual">✏️ ידני</button>
+    <button class="create-tab" id="ctab-ai" onclick="switchCreateTab('ai')" data-i18n="ctab_ai">🤖 AI אוטומטי</button>
+  </div>
+  <!-- MANUAL -->
+  <div id="create-manual" class="create-panel">
+    <div class="ai-box">
+      <div class="ai-box-title" data-i18n="manual_title">הוסף כרטיסייה חדשה</div>
+      <div class="manual-field"><label data-i18n="card_front_label">🃏 גב הכרטיס (שאלה)</label><textarea class="ai-textarea" id="manual-q" rows="3" data-i18n-placeholder="card_front_ph" placeholder="הקלד את השאלה..."></textarea></div>
+      <div class="manual-field" style="margin-top:12px"><label data-i18n="card_back_label">💡 פנים הכרטיס (תשובה)</label><textarea class="ai-textarea" id="manual-a" rows="3" data-i18n-placeholder="card_back_ph" placeholder="הקלד את התשובה..."></textarea></div>
+      <div class="manual-field" style="margin-top:12px">
+        <label data-i18n="card_deck_label">📚 שייך לחפיסה</label>
+        <select class="exam-deck-select" id="manual-deck" onchange="toggleNewDeckInput(this.value)">
+          <option value="pharma" data-i18n="deck_pharma">💊 פרמקולוגיה</option>
+          <option value="cardio" data-i18n="deck_cardio">🫀 קרדיולוגיה</option>
+          <option value="neuro" data-i18n="deck_neuro">🧠 נוירולוגיה</option>
+          <option value="micro" data-i18n="deck_micro">🦠 מיקרוביולוגיה</option>
+          <option value="hemo" data-i18n="deck_hemo">🩸 המטולוגיה</option>
+          <option value="anatomy" data-i18n="deck_anatomy">🦴 אנטומיה</option>
+          <option value="__new__" data-i18n="new_deck_option">✨ + צור חפיסה חדשה</option>
+        </select>
+        <div id="new-deck-fields" style="display:none;margin-top:10px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+            <span id="new-deck-emoji-display" style="font-size:1.4rem;cursor:pointer;padding:6px 10px;background:#edf1fb;border-radius:8px;" onclick="toggleEmojiPicker()">📖</span>
+            <input class="exam-input" id="new-deck-name" data-i18n-placeholder="new_deck_name_ph" placeholder="שם החפיסה החדשה..." style="flex:1"/>
+          </div>
+          <div id="emoji-picker" style="display:none;flex-wrap:wrap;gap:6px;padding:10px;background:#f4f7ff;border-radius:10px;margin-bottom:8px;">
+            <span class="emoji-opt" onclick="pickEmoji('📖')">📖</span><span class="emoji-opt" onclick="pickEmoji('🧬')">🧬</span><span class="emoji-opt" onclick="pickEmoji('🦷')">🦷</span><span class="emoji-opt" onclick="pickEmoji('👁️')">👁️</span><span class="emoji-opt" onclick="pickEmoji('🫁')">🫁</span><span class="emoji-opt" onclick="pickEmoji('🦴')">🦴</span><span class="emoji-opt" onclick="pickEmoji('💉')">💉</span><span class="emoji-opt" onclick="pickEmoji('🩺')">🩺</span><span class="emoji-opt" onclick="pickEmoji('🧪')">🧪</span><span class="emoji-opt" onclick="pickEmoji('🏥')">🏥</span><span class="emoji-opt" onclick="pickEmoji('🧠')">🧠</span><span class="emoji-opt" onclick="pickEmoji('❤️')">❤️</span>
+          </div>
+        </div>
+      </div>
+      <button class="ai-btn" style="margin-top:14px" onclick="addManualCard()"><span data-i18n="add_manual_btn">+ הוסף כרטיסייה</span></button>
+    </div>
+    <div id="manual-preview" class="generated-cards"></div>
+  </div>
+  <!-- AI -->
+  <div id="create-ai" class="create-panel" style="display:none">
+    <div class="ai-box">
+      <div class="ai-box-title" data-i18n="ai_subtitle">הדבק טקסט, תמונה, PDF או סיכום</div>
+      <div class="input-type-row">
+        <button class="input-type-btn active" id="itype-text" onclick="switchInputType('text')" data-i18n="itype_text">📝 טקסט</button>
+        <button class="input-type-btn" id="itype-image" onclick="switchInputType('image')" data-i18n="itype_image">🖼️ תמונה</button>
+        <button class="input-type-btn" id="itype-file" onclick="switchInputType('file')" data-i18n="itype_file">📄 קובץ</button>
+      </div>
+      <div id="input-text-area"><textarea class="ai-textarea" id="ai-input" data-i18n-placeholder="ai_placeholder" placeholder="לדוגמה: מטפורמין הוא תרופה..."></textarea></div>
+      <div id="input-image-area" style="display:none">
+        <div class="upload-zone" id="image-drop-zone" onclick="document.getElementById('image-file-input').click()">
+          <div class="upload-icon">🖼️</div><div class="upload-text" data-i18n="upload_image_txt">לחץ להעלאת תמונה</div><div class="upload-sub" data-i18n="upload_image_sub">JPG, PNG עד 10MB</div>
+          <input type="file" id="image-file-input" accept="image/*" multiple style="display:none" onchange="handleImageUpload(this)"/>
+        </div>
+        <div id="image-preview-wrap" style="display:none;margin-top:12px;"><img id="image-preview" style="max-width:100%;border-radius:10px;max-height:200px;object-fit:contain;"/><button onclick="clearImage()" style="display:block;margin-top:8px;background:none;border:none;color:var(--red);cursor:pointer;font-size:.85rem;" data-i18n="remove_file">✕ הסר</button></div>
+      </div>
+      <div id="input-file-area" style="display:none">
+        <div class="upload-zone" onclick="document.getElementById('pdf-file-input').click()">
+          <div class="upload-icon">📄</div><div class="upload-text" data-i18n="upload_file_txt">לחץ להעלאת קובץ</div><div class="upload-sub" data-i18n="upload_file_sub">PDF, TXT עד 20MB</div>
+          <input type="file" id="pdf-file-input" accept=".pdf,.txt,.doc,.docx" style="display:none" onchange="handleFileUpload(this)"/>
+        </div>
+        <div id="file-name-wrap" style="display:none;margin-top:10px;padding:10px 14px;background:var(--accent-light);border-radius:10px;font-size:.88rem;color:var(--accent);align-items:center;gap:8px;">
+          <span>📄</span><span id="file-name-label"></span><button onclick="clearFile()" style="margin-right:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:.85rem;">✕</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;align-items:center;gap:10px;">
+        <label style="font-size:.78rem;color:var(--muted);white-space:nowrap;" data-i18n="add_to_deck">הוסף לחפיסה:</label>
+        <select class="exam-deck-select" id="ai-deck-target" style="flex:1">
+          <option value="pharma" data-i18n="deck_pharma">💊 פרמקולוגיה</option>
+          <option value="cardio" data-i18n="deck_cardio">🫀 קרדיולוגיה</option>
+          <option value="neuro" data-i18n="deck_neuro">🧠 נוירולוגיה</option>
+          <option value="micro" data-i18n="deck_micro">🦠 מיקרוביולוגיה</option>
+          <option value="hemo" data-i18n="deck_hemo">🩸 המטולוגיה</option>
+          <option value="anatomy" data-i18n="deck_anatomy">🦴 אנטומיה</option>
+        </select>
+      </div>
+      <button class="ai-btn" id="ai-btn" onclick="generateCards()" style="margin-top:14px">
+        <div class="spinner" id="spinner"></div>
+        <span id="btn-text" data-i18n="ai_btn">✦ צור קלפים אוטומטית</span>
+      </button>
+    </div>
+    <div class="generated-cards" id="generated-cards"></div>
+  </div>
+</div>
+
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ══ TRANSLATIONS ══
+const TR={
+he:{dir:'rtl',lang:'he',flag:'🇮🇱',short:'עב',tab_home:'בית',tab_study:'לימוד',tab_daily:'יומי',tab_decks:'חפיסות',tab_exams:'מבחנים',stat_today:'היום',stat_streak:'ימי רצף',stat_total:'סה"כ קלפים',stat_pct:'אחוז הצלחה',deck_label:'חפיסה:',deck_all:'כל הקלפים',deck_pharma:'💊 פרמקולוגיה',deck_cardio:'🫀 קרדיולוגיה',deck_neuro:'🧠 נוירולוגיה',deck_micro:'🦠 מיקרוביולוגיה',deck_hemo:'🩸 המטולוגיה',deck_anatomy:'🦴 אנטומיה',flip_hint:'לחץ על הקלף להפוך',card_hint:'לחץ לראות תשובה',answer_label:'תשובה',btn_again:'שוב',btn_hard:'קשה',btn_good:'טוב',btn_easy:'קל',urgent_go:'תרגל עכשיו',my_decks:'החפיסות שלי',cards_word:'קלפים',due_today:'לחזרה היום',practice_btn:'▶ תרגל חפיסה זו',new_deck:'צור חפיסה חדשה',with_ai:'עם AI',exams_title:'המבחנים שלי',add_exam_title:'הוסף מבחן חדש',exam_name_label:'שם המבחן',exam_date_label:'תאריך המבחן',exam_deck_label:'חפיסה קשורה',exam_notes_label:'הערות',exam_name_ph:'לדוגמה: פרמקולוגיה מודול 2',exam_notes_ph:'פרטים נוספים...',add_exam_btn:'+ הוסף מבחן',upcoming_exams:'מבחנים קרובים',days_left:'ימים',exam_study_btn:'תרגל',delete_btn:'🗑',no_exams_title:'אין מבחנים',no_exams_sub:'הוסף את המבחן הראשון שלך למעלה',daily_greeting:'תרגול יומי',daily_title_text:'מה ללמוד היום?',priority_title:'עדיפות לימוד לפי מבחנים קרובים',start_daily_btn:'▶ התחל תרגול יומי',badge_urgent:'דחוף!',badge_soon:'השבוע',badge_normal:'רגיל',no_priority:'אין מבחנים קרובים',ai_title:'יצירת קלפים ✦',ai_subtitle:'הדבק טקסט, תמונה, PDF או סיכום',ai_btn:'✦ צור קלפים אוטומטית',ai_generating:'מייצר קלפים...',ai_placeholder:'לדוגמה: מטפורמין הוא תרופה...',cards_generated:'✦ קלפים שנוצרו',add_card:'+ הוסף',added:'✓ נוסף',toast_added:'✓ קלף נוסף!',toast_done:'🎉 סיימת את כל הקלפים!',toast_exam_added:'📅 מבחן נוסף!',toast_deck:'▶ מתרגל: ',daily_cards_label:'קלפים',today_label:'היום!',exam_passed:'עבר',urgent_sub:'מומלץ לתרגל עכשיו',fill_fields:'מלא שם ותאריך',tab_home:'בית',streak_label:'ימים ברצף',streak_goal_txt:'עוד {n} ימים לרקורד!',streak_record:'רקורד חדש! 🏆',today_plan:'תכנית היום',today_no_exams:'אין מבחנים קרובים – לך לתרגל חופשי!',btn_structured:'תרגול מתוכנן',btn_structured_sub:'לפי מבחנים קרובים',btn_free:'תרגול חופשי',btn_free_sub:'בחר נושא בעצמך',cards_due:'קלפים לחזרה',ctab_manual:'✏️ ידני',ctab_ai:'🤖 AI אוטומטי',manual_title:'הוסף כרטיסייה חדשה',card_front_label:'🃏 גב הכרטיס (שאלה)',card_front_ph:'הקלד את השאלה...',card_back_label:'💡 פנים הכרטיס (תשובה)',card_back_ph:'הקלד את התשובה...',card_deck_label:'📚 שייך לחפיסה',add_manual_btn:'+ הוסף כרטיסייה',itype_text:'📝 טקסט',itype_image:'🖼️ תמונה',itype_file:'📄 קובץ',upload_image_txt:'לחץ להעלאת תמונה',upload_image_sub:'JPG, PNG עד 10MB',upload_file_txt:'לחץ להעלאת קובץ',upload_file_sub:'PDF, TXT עד 20MB',remove_file:'✕ הסר',add_to_deck:'הוסף לחפיסה:',toast_manual_added:'✅ כרטיסייה נוספה!',toast_manual_err:'⚠️ מלא שאלה ותשובה',new_deck_option:'✨ + צור חפיסה חדשה',new_deck_name_ph:'שם החפיסה החדשה...',import_deck_btn:'📥 ייבא חפיסה',export_btn:'📤 ייצא',share_toast:'📤 קובץ הורד!',import_toast:'📥 חפיסה יובאה!',import_err:'⚠️ קובץ לא תקין',new_deck_err:'⚠️ הכנס שם לחפיסה',add_manual_short:'ידני',completed:'הושלמו',correct_word:'נכון',keep_going:'המשך ללמוד 💪',deck_done_sub:'סיימת את החפיסה',mastered_label:'שולטים',due_label:'לחזרה היום',smart_study_btn:'תרגול חכם',},
+en:{dir:'ltr',lang:'en',flag:'🇬🇧',short:'EN',tab_home:'Home',tab_study:'Study',tab_daily:'Daily',tab_decks:'Decks',tab_exams:'Exams',stat_today:'Today',stat_streak:'Streak',stat_total:'Total Cards',stat_pct:'Success',deck_label:'Deck:',deck_all:'All Cards',deck_pharma:'💊 Pharmacology',deck_cardio:'🫀 Cardiology',deck_neuro:'🧠 Neurology',deck_micro:'🦠 Microbiology',deck_hemo:'🩸 Hematology',deck_anatomy:'🦴 Anatomy',flip_hint:'Tap to flip',card_hint:'Tap to see answer',answer_label:'Answer',btn_again:'Again',btn_hard:'Hard',btn_good:'Good',btn_easy:'Easy',urgent_go:'Study Now',my_decks:'My Decks',cards_word:'cards',due_today:'due today',practice_btn:'▶ Practice Deck',new_deck:'New Deck',with_ai:'with AI',exams_title:'My Exams',add_exam_title:'Add New Exam',exam_name_label:'Exam Name',exam_date_label:'Exam Date',exam_deck_label:'Linked Deck',exam_notes_label:'Notes',exam_name_ph:'e.g. Pharmacology Module 2',exam_notes_ph:'Additional details...',add_exam_btn:'+ Add Exam',upcoming_exams:'Upcoming Exams',days_left:'days',exam_study_btn:'Study',delete_btn:'🗑',no_exams_title:'No Exams',no_exams_sub:'Add your first exam above',daily_greeting:'Daily Practice',daily_title_text:"What to study today?",priority_title:'Study priority based on upcoming exams',start_daily_btn:'▶ Start Daily Session',badge_urgent:'Urgent!',badge_soon:'This week',badge_normal:'Normal',no_priority:'No upcoming exams',ai_title:'Generate Cards ✦',ai_subtitle:'Paste text, image, PDF or notes',ai_btn:'✦ Generate Cards',ai_generating:'Generating...',ai_placeholder:'e.g. Metformin is a biguanide...',cards_generated:'✦ Generated Cards',add_card:'+ Add',added:'✓ Added',toast_added:'✓ Card added!',toast_done:'🎉 All cards done!',toast_exam_added:'📅 Exam added!',toast_deck:'▶ Studying: ',daily_cards_label:'cards',today_label:'Today!',exam_passed:'passed',urgent_sub:'Recommended to study now',fill_fields:'Fill name and date',streak_label:'day streak',streak_goal_txt:'{n} days to record!',streak_record:'New record! 🏆',today_plan:"Today's Plan",today_no_exams:'No upcoming exams – go free study!',btn_structured:'Structured Study',btn_structured_sub:'Based on upcoming exams',btn_free:'Free Study',btn_free_sub:'Choose your own topic',cards_due:'cards due',ctab_manual:'✏️ Manual',ctab_ai:'🤖 AI Auto',manual_title:'Add New Card',card_front_label:'🃏 Front (Question)',card_front_ph:'Type the question...',card_back_label:'💡 Back (Answer)',card_back_ph:'Type the answer...',card_deck_label:'📚 Add to Deck',add_manual_btn:'+ Add Card',itype_text:'📝 Text',itype_image:'🖼️ Image',itype_file:'📄 File',upload_image_txt:'Tap to upload image',upload_image_sub:'JPG, PNG up to 10MB',upload_file_txt:'Tap to upload file',upload_file_sub:'PDF, TXT up to 20MB',remove_file:'✕ Remove',add_to_deck:'Add to deck:',toast_manual_added:'✅ Card added!',toast_manual_err:'⚠️ Fill question and answer',new_deck_option:'✨ + Create New Deck',new_deck_name_ph:'New deck name...',import_deck_btn:'📥 Import Deck',export_btn:'📤 Export',share_toast:'📤 File downloaded!',import_toast:'📥 Deck imported!',import_err:'⚠️ Invalid file',new_deck_err:'⚠️ Enter deck name',add_manual_short:'Manual',completed:'completed',correct_word:'correct',keep_going:'Keep going 💪',deck_done_sub:'Deck completed',mastered_label:'mastered',due_label:'due today',smart_study_btn:'Smart Study',},
+it:{dir:'ltr',lang:'it',flag:'🇮🇹',short:'IT',tab_home:'Home',tab_study:'Studio',tab_daily:'Giornaliero',tab_decks:'Mazzi',tab_exams:'Esami',stat_today:'Oggi',stat_streak:'Giorni',stat_total:'Tot. carte',stat_pct:'Successo',deck_label:'Mazzo:',deck_all:'Tutte le carte',deck_pharma:'💊 Farmacologia',deck_cardio:'🫀 Cardiologia',deck_neuro:'🧠 Neurologia',deck_micro:'🦠 Microbiologia',deck_hemo:'🩸 Ematologia',deck_anatomy:'🦴 Anatomia',flip_hint:'Clicca per girare',card_hint:'Clicca per risposta',answer_label:'Risposta',btn_again:'Ancora',btn_hard:'Difficile',btn_good:'Bene',btn_easy:'Facile',urgent_go:'Studia ora',my_decks:'I miei mazzi',cards_word:'carte',due_today:'da ripassare',practice_btn:'▶ Esercita mazzo',new_deck:'Nuovo mazzo',with_ai:'con AI',exams_title:'I miei esami',add_exam_title:'Aggiungi esame',exam_name_label:'Nome esame',exam_date_label:'Data esame',exam_deck_label:'Mazzo collegato',exam_notes_label:'Note',exam_name_ph:'es. Farmacologia Mod. 2',exam_notes_ph:'Dettagli...',add_exam_btn:'+ Aggiungi esame',upcoming_exams:'Prossimi esami',days_left:'giorni',exam_study_btn:'Studia',delete_btn:'🗑',no_exams_title:'Nessun esame',no_exams_sub:'Aggiungi il primo esame',daily_greeting:'Pratica giornaliera',daily_title_text:'Cosa studiare oggi?',priority_title:'Priorità per esami vicini',start_daily_btn:'▶ Inizia sessione',badge_urgent:'Urgente!',badge_soon:'Questa settimana',badge_normal:'Normale',no_priority:'Nessun esame vicino',ai_title:'Crea carte ✦',ai_subtitle:'Incolla testo, immagine, PDF',ai_btn:'✦ Genera carte',ai_generating:'Generazione...',ai_placeholder:'es. La metformina è...',cards_generated:'✦ Carte generate',add_card:'+ Aggiungi',added:'✓ Aggiunto',toast_added:'✓ Carta aggiunta!',toast_done:'🎉 Tutte le carte!',toast_exam_added:'📅 Esame aggiunto!',toast_deck:'▶ Studio: ',daily_cards_label:'carte',today_label:'Oggi!',exam_passed:'passato',urgent_sub:'Si consiglia di studiare ora',fill_fields:'Inserisci nome e data',streak_label:'giorni di fila',streak_goal_txt:'{n} giorni al record!',streak_record:'Nuovo record! 🏆',today_plan:'Piano di oggi',today_no_exams:'Nessun esame – studio libero!',btn_structured:'Studio strutturato',btn_structured_sub:'Basato sugli esami vicini',btn_free:'Studio libero',btn_free_sub:'Scegli tu il tema',cards_due:'carte da ripassare',ctab_manual:'✏️ Manuale',ctab_ai:'🤖 AI Auto',manual_title:'Aggiungi carta',card_front_label:'🃏 Fronte (Domanda)',card_front_ph:'Scrivi la domanda...',card_back_label:'💡 Retro (Risposta)',card_back_ph:'Scrivi la risposta...',card_deck_label:'📚 Mazzo',add_manual_btn:'+ Aggiungi carta',itype_text:'📝 Testo',itype_image:'🖼️ Immagine',itype_file:'📄 File',upload_image_txt:'Carica immagine',upload_image_sub:'JPG, PNG max 10MB',upload_file_txt:'Carica file',upload_file_sub:'PDF, TXT max 20MB',remove_file:'✕ Rimuovi',add_to_deck:'Aggiungi al mazzo:',toast_manual_added:'✅ Carta aggiunta!',toast_manual_err:'⚠️ Compila domanda e risposta',new_deck_option:'✨ + Crea nuovo mazzo',new_deck_name_ph:'Nome nuovo mazzo...',import_deck_btn:'📥 Importa',export_btn:'📤 Esporta',share_toast:'📤 Scaricato!',import_toast:'📥 Mazzo importato!',import_err:'⚠️ File non valido',new_deck_err:'⚠️ Inserisci nome',add_manual_short:'Manuale',completed:'completate',correct_word:'corrette',keep_going:'Continua 💪',deck_done_sub:'Mazzo completato',mastered_label:'acquisite',due_label:'da ripassare',smart_study_btn:'Studio smart',},
+es:{dir:'ltr',lang:'es',flag:'🇪🇸',short:'ES',tab_home:'Inicio',tab_study:'Estudiar',tab_daily:'Diario',tab_decks:'Mazos',tab_exams:'Exámenes',stat_today:'Hoy',stat_streak:'Racha',stat_total:'Total',stat_pct:'Éxito',deck_label:'Mazo:',deck_all:'Todas',deck_pharma:'💊 Farmacología',deck_cardio:'🫀 Cardiología',deck_neuro:'🧠 Neurología',deck_micro:'🦠 Microbiología',deck_hemo:'🩸 Hematología',deck_anatomy:'🦴 Anatomía',flip_hint:'Clic para voltear',card_hint:'Clic para respuesta',answer_label:'Respuesta',btn_again:'Otra vez',btn_hard:'Difícil',btn_good:'Bien',btn_easy:'Fácil',urgent_go:'Estudiar',my_decks:'Mis mazos',cards_word:'tarjetas',due_today:'pendientes',practice_btn:'▶ Practicar',new_deck:'Nuevo mazo',with_ai:'con IA',exams_title:'Mis exámenes',add_exam_title:'Añadir examen',exam_name_label:'Nombre',exam_date_label:'Fecha',exam_deck_label:'Mazo',exam_notes_label:'Notas',exam_name_ph:'ej. Farmacología Módulo 2',exam_notes_ph:'Detalles...',add_exam_btn:'+ Añadir',upcoming_exams:'Próximos exámenes',days_left:'días',exam_study_btn:'Estudiar',delete_btn:'🗑',no_exams_title:'Sin exámenes',no_exams_sub:'Añade tu primer examen',daily_greeting:'Práctica diaria',daily_title_text:'¿Qué estudiar hoy?',priority_title:'Prioridad según exámenes',start_daily_btn:'▶ Iniciar sesión',badge_urgent:'¡Urgente!',badge_soon:'Esta semana',badge_normal:'Normal',no_priority:'Sin exámenes próximos',ai_title:'Crear tarjetas ✦',ai_subtitle:'Pega texto, imagen, PDF',ai_btn:'✦ Generar',ai_generating:'Generando...',ai_placeholder:'ej. La metformina es...',cards_generated:'✦ Tarjetas',add_card:'+ Añadir',added:'✓ Añadido',toast_added:'✓ Añadida!',toast_done:'🎉 Terminaste!',toast_exam_added:'📅 Añadido!',toast_deck:'▶ ',daily_cards_label:'tarjetas',today_label:'¡Hoy!',exam_passed:'pasado',urgent_sub:'Se recomienda estudiar',fill_fields:'Rellena nombre y fecha',streak_label:'días seguidos',streak_goal_txt:'¡{n} días para el récord!',streak_record:'¡Nuevo récord! 🏆',today_plan:'Plan de hoy',today_no_exams:'Sin exámenes – estudio libre!',btn_structured:'Estudio planificado',btn_structured_sub:'Según exámenes',btn_free:'Estudio libre',btn_free_sub:'Elige tu tema',cards_due:'pendientes',ctab_manual:'✏️ Manual',ctab_ai:'🤖 IA Auto',manual_title:'Añadir tarjeta',card_front_label:'🃏 Frente',card_front_ph:'Escribe la pregunta...',card_back_label:'💡 Dorso',card_back_ph:'Escribe la respuesta...',card_deck_label:'📚 Mazo',add_manual_btn:'+ Añadir',itype_text:'📝 Texto',itype_image:'🖼️ Imagen',itype_file:'📄 Archivo',upload_image_txt:'Subir imagen',upload_image_sub:'JPG, PNG max 10MB',upload_file_txt:'Subir archivo',upload_file_sub:'PDF, TXT max 20MB',remove_file:'✕ Quitar',add_to_deck:'Mazo:',toast_manual_added:'✅ Añadida!',toast_manual_err:'⚠️ Rellena los campos',new_deck_option:'✨ + Nuevo mazo',new_deck_name_ph:'Nombre del mazo...',import_deck_btn:'📥 Importar',export_btn:'📤 Exportar',share_toast:'📤 Descargado!',import_toast:'📥 Importado!',import_err:'⚠️ Archivo inválido',new_deck_err:'⚠️ Introduce nombre',add_manual_short:'Manual',completed:'completadas',correct_word:'correctas',keep_going:'Continuar 💪',deck_done_sub:'Mazo completado',mastered_label:'dominadas',due_label:'pendientes',smart_study_btn:'Estudio inteligente',},
+ru:{dir:'ltr',lang:'ru',flag:'🇷🇺',short:'RU',tab_home:'Главная',tab_study:'Учёба',tab_daily:'Ежедневно',tab_decks:'Колоды',tab_exams:'Экзамены',stat_today:'Сегодня',stat_streak:'Дней',stat_total:'Карточек',stat_pct:'Успех',deck_label:'Колода:',deck_all:'Все карточки',deck_pharma:'💊 Фармакология',deck_cardio:'🫀 Кардиология',deck_neuro:'🧠 Неврология',deck_micro:'🦠 Микробиология',deck_hemo:'🩸 Гематология',deck_anatomy:'🦴 Анатомия',flip_hint:'Нажмите для поворота',card_hint:'Нажмите для ответа',answer_label:'Ответ',btn_again:'Снова',btn_hard:'Трудно',btn_good:'Хорошо',btn_easy:'Легко',urgent_go:'Учить',my_decks:'Мои колоды',cards_word:'карточек',due_today:'к повторению',practice_btn:'▶ Тренировать',new_deck:'Новая колода',with_ai:'с ИИ',exams_title:'Мои экзамены',add_exam_title:'Добавить экзамен',exam_name_label:'Название',exam_date_label:'Дата',exam_deck_label:'Колода',exam_notes_label:'Заметки',exam_name_ph:'напр. Фармакология',exam_notes_ph:'Доп. информация...',add_exam_btn:'+ Добавить',upcoming_exams:'Предстоящие',days_left:'дней',exam_study_btn:'Учить',delete_btn:'🗑',no_exams_title:'Нет экзаменов',no_exams_sub:'Добавьте первый',daily_greeting:'Ежедневная практика',daily_title_text:'Что учить сегодня?',priority_title:'Приоритет по экзаменам',start_daily_btn:'▶ Начать',badge_urgent:'Срочно!',badge_soon:'Эта неделя',badge_normal:'Обычный',no_priority:'Нет ближайших экзаменов',ai_title:'Создать карточки ✦',ai_subtitle:'Вставьте текст, фото, PDF',ai_btn:'✦ Создать',ai_generating:'Генерация...',ai_placeholder:'напр. Метформин...',cards_generated:'✦ Карточки',add_card:'+ Добавить',added:'✓ Добавлено',toast_added:'✓ Добавлено!',toast_done:'🎉 Готово!',toast_exam_added:'📅 Добавлено!',toast_deck:'▶ ',daily_cards_label:'карточек',today_label:'Сегодня!',exam_passed:'прошёл',urgent_sub:'Рекомендуется учить',fill_fields:'Заполните поля',streak_label:'дней подряд',streak_goal_txt:'{n} дней до рекорда!',streak_record:'Новый рекорд! 🏆',today_plan:'План на сегодня',today_no_exams:'Нет экзаменов – свободное учение!',btn_structured:'Структурированное',btn_structured_sub:'По ближайшим экзаменам',btn_free:'Свободное',btn_free_sub:'Выбери свою тему',cards_due:'к повторению',ctab_manual:'✏️ Вручную',ctab_ai:'🤖 ИИ Авто',manual_title:'Добавить карточку',card_front_label:'🃏 Вопрос',card_front_ph:'Введите вопрос...',card_back_label:'💡 Ответ',card_back_ph:'Введите ответ...',card_deck_label:'📚 Колода',add_manual_btn:'+ Добавить',itype_text:'📝 Текст',itype_image:'🖼️ Фото',itype_file:'📄 Файл',upload_image_txt:'Загрузить фото',upload_image_sub:'JPG, PNG до 10MB',upload_file_txt:'Загрузить файл',upload_file_sub:'PDF, TXT до 20MB',remove_file:'✕ Удалить',add_to_deck:'В колоду:',toast_manual_added:'✅ Добавлено!',toast_manual_err:'⚠️ Заполните поля',new_deck_option:'✨ + Новая колода',new_deck_name_ph:'Название колоды...',import_deck_btn:'📥 Импорт',export_btn:'📤 Экспорт',share_toast:'📤 Скачано!',import_toast:'📥 Импортировано!',import_err:'⚠️ Неверный файл',new_deck_err:'⚠️ Введите название',add_manual_short:'Вручную',completed:'завершено',correct_word:'верно',keep_going:'Продолжить 💪',mastered_label:'освоено',due_label:'к повторению',smart_study_btn:'Умная учёба',deck_done_sub:'Колода завершена',}
+};
+let currentLang='he';
+function t(k){return TR[currentLang][k]||k;}
+function setLang(lang){
+  currentLang=lang;const tr=TR[lang];
+  document.documentElement.lang=tr.lang;document.documentElement.dir=tr.dir;
+  document.getElementById('lang-flag').textContent=tr.flag;
+  document.getElementById('lang-label').textContent=tr.short;
+  document.querySelectorAll('.lang-option').forEach(el=>el.classList.toggle('active',el.onclick.toString().includes("'"+lang+"'")));
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(!tr[k])return;if(el.children.length===0)el.textContent=tr[k];else Array.from(el.childNodes).forEach(n=>{if(n.nodeType===3&&n.textContent.trim())n.textContent=tr[k];});});
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(tr[k])el.placeholder=tr[k];});
+  const ugBtn=document.getElementById('urgent-go-btn');if(ugBtn)ugBtn.textContent=tr['urgent_go'];
+  document.getElementById('lang-dropdown').classList.remove('open');
+  renderHome();renderDecks();renderExams();renderDaily();checkUrgentBanner();loadCard(currentIdx);
+  const badge=document.getElementById('active-badge');if(badge)badge.textContent='✦ '+(deckNames()[currentDeck]||tr['deck_all']);
+}
+function toggleLangMenu(){document.getElementById('lang-dropdown').classList.toggle('open');}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#lang-btn')&&!e.target.closest('#lang-dropdown'))document.getElementById('lang-dropdown').classList.remove('open');
+  const tab=e.target.closest('.tab[data-page]');if(tab)showPage(tab.getAttribute('data-page'));
+});
+
+// ══ CARDS ══
+const cardData={
+  pharma:[
+    {he:{tag:'פרמקולוגיה',q:'מהו מנגנון הפעולה של מטפורמין?',a:'מעכב קומפלקס I מיטוכונדריאלי, מפחית גלוקוניאוגנזה ומשפר רגישות לאינסולין.'},en:{tag:'Pharmacology',q:'Mechanism of action of Metformin?',a:'Inhibits mitochondrial complex I, reduces hepatic gluconeogenesis, improves insulin sensitivity.'},it:{tag:'Farmacologia',q:'Meccanismo d\'azione della Metformina?',a:'Inibisce il complesso I mitocondriale, riduce la gluconeogenesi epatica.'},es:{tag:'Farmacología',q:'¿Mecanismo de acción de la Metformina?',a:'Inhibe el complejo I mitocondrial, reduce la gluconeogénesis hepática.'},ru:{tag:'Фармакология',q:'Механизм действия Метформина?',a:'Ингибирует митохондриальный комплекс I, снижает глюконеогенез в печени.'}},
+    {he:{tag:'פרמקולוגיה',q:'תופעות לוואי של מטפורמין?',a:'בחילה, שלשול, כאבי בטן. נדיר: חמצת לקטית. לא גורם היפוגליקמיה.'},en:{tag:'Pharmacology',q:'Side effects of Metformin?',a:'Nausea, diarrhea, abdominal pain. Rare: lactic acidosis. No hypoglycemia.'},it:{tag:'Farmacologia',q:'Effetti collaterali della Metformina?',a:'Nausea, diarrea, dolori addominali. Raro: acidosi lattica.'},es:{tag:'Farmacología',q:'Efectos secundarios de Metformina?',a:'Náuseas, diarrea. Raro: acidosis láctica.'},ru:{tag:'Фармакология',q:'Побочные эффекты Метформина?',a:'Тошнота, диарея. Редко: лактоацидоз.'}}
+  ],
+  cardio:[
+    {he:{tag:'קרדיולוגיה',q:'קריטריוני Framingham לאי ספיקת לב?',a:'מג\'ורי: קרפיטציות, גלימת צוואר, PND. מינורי: בצקת, שיעול לילי.'},en:{tag:'Cardiology',q:'Framingham criteria for heart failure?',a:'Major: crackles, JVD, PND, cardiomegaly. Minor: edema, nocturnal cough.'},it:{tag:'Cardiologia',q:'Criteri di Framingham per scompenso cardiaco?',a:'Maggiori: rantoli, JVD, PND. Minori: edema, tosse notturna.'},es:{tag:'Cardiología',q:'Criterios de Framingham para insuficiencia cardíaca?',a:'Mayores: crepitantes, JVD, PND. Menores: edema, tos nocturna.'},ru:{tag:'Кардиология',q:'Критерии Фрамингема при сердечной недостаточности?',a:'Большие: хрипы, JVD, ПНД. Малые: отёки, ночной кашель.'}},
+    {he:{tag:'קרדיולוגיה',q:'EKG ב-STEMI?',a:'עליית ST > 2mm בשני לידים סמוכים, Q pathological, היפוך T.'},en:{tag:'Cardiology',q:'ECG findings in STEMI?',a:'ST elevation >2mm in ≥2 contiguous leads, pathological Q waves, T-wave inversion.'},it:{tag:'Cardiologia',q:'ECG nello STEMI?',a:'Sopralivellamento ST >2mm in ≥2 derivazioni contigue, onde Q patologiche.'},es:{tag:'Cardiología',q:'ECG en STEMI?',a:'Elevación ST >2mm en ≥2 derivaciones contiguas, ondas Q patológicas.'},ru:{tag:'Кардиология',q:'ЭКГ при STEMI?',a:'Подъём ST >2мм в ≥2 смежных отведениях, патологические Q.'}}
+  ],
+  neuro:[
+    {he:{tag:'נוירולוגיה',q:'סימני FAST לשבץ מוחי?',a:'F–Face drooping, A–Arm weakness, S–Speech difficulty, T–Time to call.'},en:{tag:'Neurology',q:'FAST signs of stroke?',a:'F–Face drooping, A–Arm weakness, S–Speech difficulty, T–Time to call emergency.'},it:{tag:'Neurologia',q:'Segni FAST dell\'ictus?',a:'F–Asimmetria facciale, A–Braccio debole, S–Difficoltà parola, T–Tempo.'},es:{tag:'Neurología',q:'Signos FAST del ictus?',a:'F–Caída facial, A–Brazo débil, S–Habla, T–Tiempo de llamar.'},ru:{tag:'Неврология',q:'Признаки FAST при инсульте?',a:'F–Асимметрия лица, A–Слабость руки, S–Речь, T–Время.'}},
+    {he:{tag:'נוירולוגיה',q:'טיפול ראשוני בסטטוס אפילפטיקוס?',a:'ABC → Lorazepam IV 0.1mg/kg → Phenytoin → Propofol אם עמיד.'},en:{tag:'Neurology',q:'First-line treatment for status epilepticus?',a:'ABC → Lorazepam IV 0.1mg/kg → Phenytoin → Propofol if refractory.'},it:{tag:'Neurologia',q:'Trattamento stato epilettico?',a:'ABC → Lorazepam IV 0.1mg/kg → Fenitoina → Propofol.'},es:{tag:'Neurología',q:'Tratamiento estado epiléptico?',a:'ABC → Lorazepam IV 0.1mg/kg → Fenitoína → Propofol.'},ru:{tag:'Неврология',q:'Лечение эпилептического статуса?',a:'ABC → Лоразепам IV 0.1мг/кг → Фенитоин → Пропофол.'}}
+  ],
+  micro:[
+    {he:{tag:'מיקרוביולוגיה',q:'הבדל בין גרם+ לגרם-?',a:'גרם+: דופן פפטידוגליקן עבה, סגול. גרם-: דופן דקה + ממברנה חיצונית עם LPS, ורוד.'},en:{tag:'Microbiology',q:'Gram-positive vs Gram-negative?',a:'Gram+: thick peptidoglycan, purple. Gram-: thin wall + LPS outer membrane, pink.'},it:{tag:'Microbiologia',q:'Gram+ vs Gram-?',a:'Gram+: parete spessa, viola. Gram-: parete sottile + LPS, rosa.'},es:{tag:'Microbiología',q:'Gram+ vs Gram-?',a:'Gram+: pared gruesa, morado. Gram-: pared delgada + LPS, rosa.'},ru:{tag:'Микробиология',q:'Грам+ против Грам-?',a:'Грам+: толстая стенка, фиолетовое. Грам-: тонкая + LPS, розовое.'}}
+  ],
+  hemo:[
+    {he:{tag:'המטולוגיה',q:'הגדרת אנמיה לפי WHO?',a:'גברים: Hb < 13. נשים: < 12. הריון: < 11 g/dL.'},en:{tag:'Hematology',q:'WHO definition of anemia?',a:'Men: Hb <13 g/dL. Women: <12. Pregnancy: <11.'},it:{tag:'Ematologia',q:'Definizione OMS di anemia?',a:'Uomini: Hb <13. Donne: <12. Gravidanza: <11 g/dL.'},es:{tag:'Hematología',q:'Definición OMS de anemia?',a:'Hombres: Hb <13. Mujeres: <12. Embarazo: <11 g/dL.'},ru:{tag:'Гематология',q:'Определение анемии по ВОЗ?',a:'Мужчины: Hb <13. Женщины: <12. Беременность: <11 г/дл.'}}
+  ]
+};
+
+// ── SVG illustrations for anatomy cards ──
+const svgHeart = `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" style="width:110px;height:90px">
+  <path d="M60,85 C60,85 15,55 15,32 C15,20 24,12 35,12 C45,12 55,20 60,28 C65,20 75,12 85,12 C96,12 105,20 105,32 C105,55 60,85 60,85Z" fill="#e8eefb" stroke="#2d4eaa" stroke-width="2.5"/>
+  <!-- RA --><ellipse cx="42" cy="38" rx="10" ry="13" fill="#c5d3f5" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- RV --><path d="M35,50 Q38,68 50,72 Q42,60 40,50Z" fill="#a0b4e8" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- LA --><ellipse cx="73" cy="35" rx="10" ry="12" fill="#4a6fd4" stroke="#1a3a8a" stroke-width="1.5"/>
+  <!-- LV --><path d="M65,48 Q68,70 60,78 Q58,65 63,48Z" fill="#2d4eaa" stroke="#1a3a8a" stroke-width="1.5"/>
+  <text x="42" y="41" text-anchor="middle" font-size="7" fill="#1a2a5e" font-family="sans-serif" font-weight="bold">RA</text>
+  <text x="73" y="38" text-anchor="middle" font-size="7" fill="white" font-family="sans-serif" font-weight="bold">LA</text>
+  <text x="38" y="62" text-anchor="middle" font-size="7" fill="#1a2a5e" font-family="sans-serif" font-weight="bold">RV</text>
+  <text x="64" y="62" text-anchor="middle" font-size="7" fill="white" font-family="sans-serif" font-weight="bold">LV</text>
+  <!-- Aorta --><path d="M68,30 Q68,18 75,14" fill="none" stroke="#c53030" stroke-width="3" stroke-linecap="round"/>
+  <!-- PA --><path d="M50,30 Q48,18 40,14" fill="none" stroke="#4a6fd4" stroke-width="3" stroke-linecap="round"/>
+  <text x="78" y="12" font-size="7" fill="#c53030" font-family="sans-serif">Ao</text>
+  <text x="32" y="12" font-size="7" fill="#4a6fd4" font-family="sans-serif">PA</text>
+</svg>`;
+
+const svgLung = `<svg viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg" style="width:120px;height:90px">
+  <!-- Trachea --><rect x="59" y="5" width="10" height="22" rx="4" fill="#c5d3f5" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- Left bronchus --><path d="M59,25 Q45,25 42,35" fill="none" stroke="#2d4eaa" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Right bronchus --><path d="M69,25 Q83,25 86,35" fill="none" stroke="#2d4eaa" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Left lung --><path d="M18,38 Q14,52 16,68 Q20,85 38,88 Q54,88 56,72 Q58,55 55,38 Q45,30 35,30 Q22,30 18,38Z" fill="#e8eefb" stroke="#2d4eaa" stroke-width="2"/>
+  <!-- Right lung --><path d="M112,38 Q116,52 114,68 Q110,85 92,88 Q76,88 74,72 Q72,55 75,38 Q85,30 95,30 Q108,30 112,38Z" fill="#dce6ff" stroke="#2d4eaa" stroke-width="2"/>
+  <!-- Lobes left --><path d="M22,60 Q38,56 54,60" fill="none" stroke="#4a6fd4" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <!-- Lobes right --><path d="M76,52 Q92,48 108,52" fill="none" stroke="#4a6fd4" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <path d="M76,68 Q92,64 108,68" fill="none" stroke="#4a6fd4" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <text x="35" y="62" text-anchor="middle" font-size="9" fill="#2d4eaa" font-family="sans-serif" font-weight="bold">L</text>
+  <text x="94" y="60" text-anchor="middle" font-size="9" fill="#2d4eaa" font-family="sans-serif" font-weight="bold">R</text>
+  <text x="35" y="74" text-anchor="middle" font-size="7" fill="#7080a8" font-family="sans-serif">2 lobes</text>
+  <text x="94" y="73" text-anchor="middle" font-size="7" fill="#7080a8" font-family="sans-serif">3 lobes</text>
+</svg>`;
+
+const svgBrain = `<svg viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg" style="width:120px;height:90px">
+  <!-- Cerebrum --><path d="M20,55 Q18,30 40,18 Q55,10 65,12 Q80,10 92,20 Q110,32 108,55 Q105,70 90,78 Q75,85 65,85 Q50,85 38,76 Q22,68 20,55Z" fill="#e8eefb" stroke="#2d4eaa" stroke-width="2"/>
+  <!-- Gyri lines --><path d="M35,28 Q45,22 55,26 Q65,30 72,24 Q82,18 90,26" fill="none" stroke="#4a6fd4" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M28,42 Q40,34 52,38 Q64,42 74,35 Q86,28 98,36" fill="none" stroke="#4a6fd4" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M25,56 Q37,48 50,52 Q63,56 76,49 Q88,43 102,50" fill="none" stroke="#4a6fd4" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Mid line --><line x1="65" y1="12" x2="65" y2="84" stroke="#2d4eaa" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <!-- Cerebellum --><path d="M42,80 Q55,90 65,88 Q75,90 88,80 Q80,75 65,77 Q50,75 42,80Z" fill="#c5d3f5" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- Brain stem --><rect x="60" y="82" width="10" height="14" rx="4" fill="#a0b4e8" stroke="#2d4eaa" stroke-width="1.5"/>
+  <text x="42" y="50" text-anchor="middle" font-size="8" fill="#2d4eaa" font-family="sans-serif" font-weight="bold">R</text>
+  <text x="88" y="50" text-anchor="middle" font-size="8" fill="#2d4eaa" font-family="sans-serif" font-weight="bold">L</text>
+  <text x="65" y="98" text-anchor="middle" font-size="7" fill="#7080a8" font-family="sans-serif">Brain stem</text>
+</svg>`;
+
+const svgKidney = `<svg viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg" style="width:120px;height:90px">
+  <!-- Left kidney --><path d="M25,20 Q14,30 14,50 Q14,70 25,80 Q36,88 44,80 Q52,70 50,50 Q50,30 42,22 Q36,14 25,20Z" fill="#e8eefb" stroke="#2d4eaa" stroke-width="2"/>
+  <!-- Left cortex --><path d="M28,28 Q18,38 18,50 Q18,62 28,72 Q36,78 42,72 Q46,62 46,50 Q46,38 40,30Z" fill="#c5d3f5" stroke="#4a6fd4" stroke-width="1"/>
+  <!-- Left medulla --><ellipse cx="34" cy="50" rx="10" ry="14" fill="#a0b4e8" stroke="#2d4eaa" stroke-width="1"/>
+  <!-- Left pelvis --><ellipse cx="43" cy="50" rx="5" ry="8" fill="#e8eefb" stroke="#2d4eaa" stroke-width="1"/>
+  <!-- Left ureter --><path d="M47,50 Q55,50 65,50" fill="none" stroke="#2d4eaa" stroke-width="2"/>
+  <!-- Right kidney --><path d="M105,20 Q116,30 116,50 Q116,70 105,80 Q94,88 86,80 Q78,70 80,50 Q80,30 88,22 Q94,14 105,20Z" fill="#dce6ff" stroke="#2d4eaa" stroke-width="2"/>
+  <path d="M102,28 Q112,38 112,50 Q112,62 102,72 Q94,78 88,72 Q84,62 84,50 Q84,38 90,30Z" fill="#c5d3f5" stroke="#4a6fd4" stroke-width="1"/>
+  <ellipse cx="96" cy="50" rx="10" ry="14" fill="#a0b4e8" stroke="#2d4eaa" stroke-width="1"/>
+  <ellipse cx="87" cy="50" rx="5" ry="8" fill="#dce6ff" stroke="#2d4eaa" stroke-width="1"/>
+  <path d="M83,50 Q75,50 65,50" fill="none" stroke="#2d4eaa" stroke-width="2"/>
+  <!-- Bladder --><ellipse cx="65" cy="60" rx="10" ry="8" fill="#e8eefb" stroke="#2d4eaa" stroke-width="1.5"/>
+  <text x="34" y="53" text-anchor="middle" font-size="7" fill="#1a2a5e" font-family="sans-serif" font-weight="bold">L</text>
+  <text x="96" y="53" text-anchor="middle" font-size="7" fill="#1a2a5e" font-family="sans-serif" font-weight="bold">R</text>
+  <text x="65" y="63" text-anchor="middle" font-size="7" fill="#2d4eaa" font-family="sans-serif">♱</text>
+</svg>`;
+
+const svgSpine = `<svg viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg" style="width:70px;height:110px">
+  <!-- Vertebrae groups -->
+  ${[0,1,2,3,4,5,6].map((i)=>`<rect x="28" y="${8+i*15}" width="24" height="11" rx="3" fill="${i<3?'#c5d3f5':i<8?'#dce6ff':'#e8eefb'}" stroke="#2d4eaa" stroke-width="1.5"/>
+  <line x1="12" y1="${13+i*15}" x2="28" y2="${13+i*15}" stroke="#4a6fd4" stroke-width="2" stroke-linecap="round"/>
+  <line x1="52" y1="${13+i*15}" x2="68" y2="${13+i*15}" stroke="#4a6fd4" stroke-width="2" stroke-linecap="round"/>`).join('')}
+  <text x="8" y="18" font-size="7" fill="#c53030" font-family="sans-serif" font-weight="bold">C</text>
+  <text x="8" y="48" font-size="7" fill="#2d4eaa" font-family="sans-serif" font-weight="bold">T</text>
+  <text x="8" y="78" font-size="7" fill="#1e7a3a" font-family="sans-serif" font-weight="bold">L</text>
+  <!-- Sacrum --><path d="M30,113 Q40,120 50,113 L50,108 L30,108Z" fill="#a0b4e8" stroke="#2d4eaa" stroke-width="1.5"/>
+  <text x="37" y="112" font-size="7" fill="white" font-family="sans-serif" font-weight="bold">S</text>
+  <!-- Spinal canal --><rect x="36" y="8" width="8" height="105" rx="2" fill="rgba(74,111,212,0.15)" stroke="none"/>
+</svg>`;
+
+const svgNeuron = `<svg viewBox="0 0 150 100" xmlns="http://www.w3.org/2000/svg" style="width:140px;height:90px">
+  <!-- Dendrites --><path d="M30,50 Q20,35 10,25" fill="none" stroke="#4a6fd4" stroke-width="2" stroke-linecap="round"/>
+  <path d="M30,50 Q15,45 5,42" fill="none" stroke="#4a6fd4" stroke-width="2" stroke-linecap="round"/>
+  <path d="M30,50 Q18,58 8,65" fill="none" stroke="#4a6fd4" stroke-width="2" stroke-linecap="round"/>
+  <path d="M30,50 Q22,68 15,78" fill="none" stroke="#4a6fd4" stroke-width="2" stroke-linecap="round"/>
+  <!-- Cell body --><circle cx="45" cy="50" r="16" fill="#c5d3f5" stroke="#2d4eaa" stroke-width="2.5"/>
+  <!-- Nucleus --><circle cx="45" cy="50" r="7" fill="#2d4eaa"/>
+  <circle cx="45" cy="50" r="3" fill="#4a6fd4"/>
+  <!-- Axon hillock + axon --><path d="M61,50 Q75,50 95,50 Q115,50 130,50" fill="none" stroke="#2d4eaa" stroke-width="3" stroke-linecap="round"/>
+  <!-- Myelin sheaths --><rect x="68" y="44" width="14" height="12" rx="5" fill="#e8eefb" stroke="#4a6fd4" stroke-width="1.5" opacity="0.9"/>
+  <rect x="88" y="44" width="14" height="12" rx="5" fill="#e8eefb" stroke="#4a6fd4" stroke-width="1.5" opacity="0.9"/>
+  <rect x="108" y="44" width="14" height="12" rx="5" fill="#e8eefb" stroke="#4a6fd4" stroke-width="1.5" opacity="0.9"/>
+  <!-- Axon terminals --><circle cx="133" cy="44" r="4" fill="#2d4eaa"/>
+  <circle cx="133" cy="50" r="4" fill="#2d4eaa"/>
+  <circle cx="133" cy="56" r="4" fill="#2d4eaa"/>
+  <text x="44" y="80" text-anchor="middle" font-size="8" fill="#2d4eaa" font-family="sans-serif" font-weight="bold">Cell body</text>
+  <text x="5" y="90" font-size="7" fill="#4a6fd4" font-family="sans-serif">Dendrites</text>
+  <text x="88" y="38" text-anchor="middle" font-size="7" fill="#7080a8" font-family="sans-serif">Myelin</text>
+  <text x="135" y="75" text-anchor="middle" font-size="7" fill="#2d4eaa" font-family="sans-serif">Terminals</text>
+</svg>`;
+
+const svgBone = `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="width:85px;height:110px">
+  <!-- Femur --><path d="M42,8 Q55,5 58,15 Q62,28 55,38 L55,78 Q62,88 58,102 Q54,115 42,112 Q30,115 28,102 Q24,88 30,78 L30,38 Q24,28 28,15 Q30,5 42,8Z" fill="#e8eefb" stroke="#2d4eaa" stroke-width="2"/>
+  <!-- Cortical bone --><path d="M37,20 Q44,18 48,22 L50,75 Q47,80 42,80 Q37,80 34,75 L36,22Z" fill="#dce6ff" stroke="#4a6fd4" stroke-width="1"/>
+  <!-- Medullary canal --><path d="M39,30 Q43,28 46,30 L46,70 Q43,72 39,70Z" fill="#f4f7ff" stroke="none"/>
+  <!-- Epiphysis top --><ellipse cx="44" cy="14" rx="14" ry="9" fill="#c5d3f5" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- Epiphysis bottom --><ellipse cx="44" cy="107" rx="14" ry="8" fill="#c5d3f5" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- Growth plates --><line x1="30" y1="24" x2="58" y2="24" stroke="#c53030" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <line x1="30" y1="96" x2="58" y2="96" stroke="#c53030" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="64" y="27" font-size="7" fill="#c53030" font-family="sans-serif">Growth plate</text>
+  <text x="64" y="99" font-size="7" fill="#c53030" font-family="sans-serif">Growth plate</text>
+  <text x="44" y="56" text-anchor="middle" font-size="7" fill="#7080a8" font-family="sans-serif">Medulla</text>
+</svg>`;
+
+const svgAbdomen = `<svg viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg" style="width:130px;height:110px">
+  <!-- Body outline --><rect x="15" y="5" width="110" height="110" rx="20" fill="#f4f7ff" stroke="#2d4eaa" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <!-- Liver (RUQ) --><path d="M20,15 Q50,12 65,22 Q68,35 55,42 Q38,45 22,38Z" fill="#c5d3f5" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- Stomach --><ellipse cx="75" cy="30" rx="18" ry="14" fill="#dce6ff" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- Spleen (LUQ) --><ellipse cx="108" cy="28" rx="12" ry="16" fill="#a0b4e8" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- Pancreas --><path d="M55,50 Q80,46 105,50 Q100,56 80,56 Q60,56 55,50Z" fill="#e8eefb" stroke="#4a6fd4" stroke-width="1.2"/>
+  <!-- Small intestine --><path d="M45,65 Q55,58 65,65 Q75,72 85,65 Q95,58 100,68 Q95,78 80,80 Q65,80 55,75 Q48,72 45,65Z" fill="#dce6ff" stroke="#4a6fd4" stroke-width="1"/>
+  <!-- Large intestine --><path d="M25,55 Q20,75 25,95 Q40,108 70,108 Q100,108 115,95 Q120,75 115,55 Q100,50 80,52 Q60,52 45,55" fill="none" stroke="#2d4eaa" stroke-width="3" stroke-linecap="round"/>
+  <!-- Labels --><text x="36" y="32" text-anchor="middle" font-size="8" fill="#1a2a5e" font-family="sans-serif" font-weight="bold">Liver</text>
+  <text x="75" y="34" text-anchor="middle" font-size="8" fill="#1a2a5e" font-family="sans-serif">Stomach</text>
+  <text x="108" y="32" text-anchor="middle" font-size="7" fill="white" font-family="sans-serif" font-weight="bold">Spleen</text>
+  <text x="78" y="55" text-anchor="middle" font-size="7" fill="#4a6fd4" font-family="sans-serif">Pancreas</text>
+  <!-- Quadrant lines --><line x1="70" y1="5" x2="70" y2="115" stroke="#c53030" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+  <line x1="15" y1="60" x2="125" y2="60" stroke="#c53030" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+  <text x="22" y="72" font-size="7" fill="#c53030" font-family="sans-serif">RUQ</text>
+  <text x="95" y="72" font-size="7" fill="#c53030" font-family="sans-serif">LUQ</text>
+  <text x="22" y="100" font-size="7" fill="#c53030" font-family="sans-serif">RLQ</text>
+  <text x="95" y="100" font-size="7" fill="#c53030" font-family="sans-serif">LLQ</text>
+</svg>`;
+
+const svgEye = `<svg viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg" style="width:120px;height:90px">
+  <!-- Sclera --><ellipse cx="65" cy="50" rx="55" ry="38" fill="white" stroke="#2d4eaa" stroke-width="2"/>
+  <!-- Cornea --><path d="M20,50 Q28,30 40,30 Q28,70 20,50Z" fill="#e8eefb" stroke="#4a6fd4" stroke-width="1.5"/>
+  <!-- Iris --><circle cx="65" cy="50" r="24" fill="#4a6fd4"/>
+  <circle cx="65" cy="50" r="22" fill="#3a5fc8"/>
+  <!-- Pupil --><circle cx="65" cy="50" r="12" fill="#0a0f1e"/>
+  <!-- Light reflex --><circle cx="70" cy="44" r="4" fill="white" opacity="0.7"/>
+  <!-- Retina --><path d="M90,50 Q105,35 120,38 Q118,50 120,62 Q105,65 90,50Z" fill="#c5d3f5" stroke="#4a6fd4" stroke-width="1"/>
+  <!-- Optic disc --><circle cx="108" cy="50" r="6" fill="#a0b4e8" stroke="#2d4eaa" stroke-width="1.5"/>
+  <!-- Macula --><circle cx="82" cy="50" r="4" fill="#dce6ff" stroke="#4a6fd4" stroke-width="1"/>
+  <!-- Lens --><ellipse cx="52" cy="50" rx="7" ry="16" fill="#e8eefb" stroke="#4a6fd4" stroke-width="1.5"/>
+  <text x="65" y="88" text-anchor="middle" font-size="8" fill="#2d4eaa" font-family="sans-serif" font-weight="bold">Cross-section</text>
+  <text x="109" y="65" text-anchor="middle" font-size="7" fill="#2d4eaa" font-family="sans-serif">Optic disc</text>
+  <text x="52" y="75" text-anchor="middle" font-size="7" fill="#4a6fd4" font-family="sans-serif">Lens</text>
+</svg>`;
+
+// Helper to make anatomy card with illustration
+function mkAnatCard(svgImg, langs){
+  return {...langs, deck:'anatomy', img: svgImg};
+}
+
+// ── Anatomy deck cards ──
+const anatomyCards = [
+  mkAnatCard(svgHeart,{he:{tag:'אנטומיה',q:'מה ארבעת חדרי הלב וסדר זרימת הדם?',a:'RA → RV → ריאות → LA → LV → גוף. צד ימין: דם מחוסר חמצן. צד שמאל: דם מחומצן.'},en:{tag:'Anatomy',q:'4 chambers of the heart & blood flow?',a:'RA → RV → Lungs → LA → LV → Body. Right: deoxygenated. Left: oxygenated.'},it:{tag:'Anatomia',q:'4 camere del cuore e flusso sanguigno?',a:'RA → RV → Polmoni → LA → LV → Corpo. Destra: venoso. Sinistra: arterioso.'},es:{tag:'Anatomía',q:'4 cámaras del corazón y flujo?',a:'RA → RV → Pulmones → LA → LV → Cuerpo. Derecha: desoxigenada. Izquierda: oxigenada.'},ru:{tag:'Анатомия',q:'4 камеры сердца и кровоток?',a:'ПП → ПЖ → Лёгкие → ЛП → ЛЖ → Тело. Правые: венозная. Левые: артериальная.'}}),
+  mkAnatCard(svgLung,{he:{tag:'אנטומיה',q:'כמה אונות יש לכל ריאה?',a:'ריאה ימנית: 3 אונות. ריאה שמאלית: 2 אונות + לשונית (lingula). השמאלית קטנה יותר בגלל הלב.'},en:{tag:'Anatomy',q:'How many lobes does each lung have?',a:'Right: 3 lobes (upper, middle, lower). Left: 2 lobes (upper, lower) + lingula. Left is smaller due to cardiac notch.'},it:{tag:'Anatomia',q:'Quanti lobi ha ogni polmone?',a:'Destro: 3 lobi. Sinistro: 2 lobi + lingula. Il sinistro è più piccolo per la loggia cardiaca.'},es:{tag:'Anatomía',q:'¿Lóbulos de cada pulmón?',a:'Derecho: 3 lóbulos. Izquierdo: 2 lóbulos + língula. El izquierdo es más pequeño.'},ru:{tag:'Анатомия',q:'Доли лёгких?',a:'Правое: 3 доли. Левое: 2 доли + язычок. Левое меньше из-за сердечной вырезки.'}}),
+  mkAnatCard(svgBrain,{he:{tag:'אנטומיה',q:'מהם אונות המוח ותפקידיהן?',a:'Frontal: תכנון, אישיות. Parietal: חושים. Temporal: זיכרון, שמיעה. Occipital: ראייה. Cerebellum: קואורדינציה.'},en:{tag:'Anatomy',q:'Brain lobes and their functions?',a:'Frontal: planning, personality. Parietal: sensory. Temporal: memory, hearing. Occipital: vision. Cerebellum: coordination.'},it:{tag:'Anatomia',q:'Lobi cerebrali e funzioni?',a:'Frontale: pianificazione. Parietale: sensoriale. Temporale: memoria. Occipitale: vista. Cervelletto: coordinazione.'},es:{tag:'Anatomía',q:'Lóbulos cerebrales y funciones?',a:'Frontal: planificación. Parietal: sensorial. Temporal: memoria. Occipital: visión. Cerebelo: coordinación.'},ru:{tag:'Анатомия',q:'Доли мозга и функции?',a:'Лобная: планирование. Теменная: чувства. Височная: память. Затылочная: зрение. Мозжечок: координация.'}}),
+  mkAnatCard(svgKidney,{he:{tag:'אנטומיה',q:'מה מבנה הכליה ותפקיד כל חלק?',a:'Cortex: גלומרולי (סינון). Medulla: צינוריות (ריכוז). Pelvis: איסוף שתן. Ureter: הובלה לשלפוחית.'},en:{tag:'Anatomy',q:'Kidney structure and function?',a:'Cortex: glomeruli (filtration). Medulla: tubules (concentration). Pelvis: collects urine. Ureter: transport to bladder.'},it:{tag:'Anatomia',q:'Struttura del rene?',a:'Corteccia: filtrazione. Midollare: concentrazione. Pelvi: raccolta urina. Uretere: trasporto.'},es:{tag:'Anatomía',q:'Estructura del riñón?',a:'Corteza: filtración. Médula: concentración. Pelvis: recoge orina. Uréter: transporte.'},ru:{tag:'Анатомия',q:'Строение почки?',a:'Кора: фильтрация. Мозговое вещество: концентрация. Лоханка: сбор мочи. Мочеточник: транспорт.'}}),
+  mkAnatCard(svgSpine,{he:{tag:'אנטומיה',q:'כמה חוליות יש בעמוד השדרה לפי אזורים?',a:'Cervical: 7. Thoracic: 12. Lumbar: 5. Sacral: 5 (מאוחדות). Coccyx: 4. סה"כ: 33. טריק: ארוחות 7-12-5.'},en:{tag:'Anatomy',q:'Number of vertebrae by region?',a:'Cervical: 7. Thoracic: 12. Lumbar: 5. Sacral: 5 fused. Coccyx: 4. Total: 33. Mnemonic: Breakfast 7, Lunch 12, Dinner 5.'},it:{tag:'Anatomia',q:'Numero di vertebre per regione?',a:'Cervicali: 7. Toraciche: 12. Lombari: 5. Sacrali: 5. Coccige: 4. Totale: 33.'},es:{tag:'Anatomía',q:'Vértebras por región?',a:'Cervicales: 7. Torácicas: 12. Lumbares: 5. Sacras: 5. Cóccix: 4. Total: 33.'},ru:{tag:'Анатомия',q:'Позвонки по отделам?',a:'Шейные: 7. Грудные: 12. Поясничные: 5. Крестцовые: 5. Копчик: 4. Итого: 33.'}}),
+  mkAnatCard(svgNeuron,{he:{tag:'אנטומיה',q:'מה מבנה הנוירון ותפקיד כל חלק?',a:'Dendrites: קולטים אותות. Cell body: עיבוד. Axon: הולכה. Myelin: מאיץ הולכה. Terminals: משחררים נוירוטרנסמיטרים.'},en:{tag:'Anatomy',q:'Neuron structure and function?',a:'Dendrites: receive signals. Cell body: processing. Axon: conducts impulse. Myelin: speeds conduction. Terminals: release neurotransmitters.'},it:{tag:'Anatomia',q:'Struttura del neurone?',a:'Dendriti: segnali in entrata. Corpo: elaborazione. Assone: conduzione. Mielina: velocizza. Terminali: neurotrasmettitori.'},es:{tag:'Anatomía',q:'Estructura neurona?',a:'Dendritas: reciben señales. Soma: procesamiento. Axón: conducción. Mielina: velocidad. Terminales: neurotransmisores.'},ru:{tag:'Анатомия',q:'Строение нейрона?',a:'Дендриты: входящие сигналы. Тело: обработка. Аксон: проведение. Миелин: ускорение. Терминали: нейромедиаторы.'}}),
+  mkAnatCard(svgBone,{he:{tag:'אנטומיה',q:'מה מבנה עצם ארוכה (Femur)?',a:'Epiphysis: סחוס מפרקי. Growth plate: גדילה בילדות. Diaphysis: עצם קורטיקלית + תעלת מדולה. Periosteum: מעטפת חיצונית.'},en:{tag:'Anatomy',q:'Long bone structure (Femur)?',a:'Epiphysis: articular cartilage. Growth plate: childhood growth. Diaphysis: cortical bone + medullary canal. Periosteum: outer covering.'},it:{tag:'Anatomia',q:'Struttura osso lungo (femore)?',a:'Epifisi: cartilagine articolare. Placca crescita: accrescimento. Diafisi: corticale + canale midollare. Periostio: esterno.'},es:{tag:'Anatomía',q:'Estructura hueso largo (fémur)?',a:'Epífisis: cartílago articular. Fisis: crecimiento. Diáfisis: cortical + canal medular. Periostio: cubierta externa.'},ru:{tag:'Анатомия',q:'Строение длинной кости?',a:'Эпифиз: суставной хрящ. Ростовая пластина: рост. Диафиз: кортикальная кость + канал. Надкостница: покрытие.'}}),
+  mkAnatCard(svgAbdomen,{he:{tag:'אנטומיה',q:'מה נמצא בכל ריבוע בבטן?',a:'RUQ: כבד, כיס מרה, כליה ימנית. LUQ: קיבה, טחול, לבלב. RLQ: אפנדיקס, מעי עיוור. LLQ: מעי גס סיגמואיד, שחלה שמאל.'},en:{tag:'Anatomy',q:'Abdominal quadrants – what is in each?',a:'RUQ: liver, gallbladder, right kidney. LUQ: stomach, spleen, pancreas. RLQ: appendix, cecum. LLQ: sigmoid colon, left ovary/testis.'},it:{tag:'Anatomia',q:'Quadranti addominali?',a:'QSD: fegato, colecisti, rene dx. QSS: stomaco, milza, pancreas. QID: appendice. QIS: sigma, ovaio sx.'},es:{tag:'Anatomía',q:'Cuadrantes abdominales?',a:'CSD: hígado, vesícula, riñón derecho. CSI: estómago, bazo, páncreas. CID: apéndice. CII: sigma, ovario izquierdo.'},ru:{tag:'Анатомия',q:'Квадранты живота?',a:'ПВК: печень, желчный, правая почка. ЛВК: желудок, селезёнка, поджелудочная. ПНК: аппендикс. ЛНК: сигмовидная.'}})
+];
+// Merge anatomy into cardData
+cardData.anatomy = anatomyCards;
+
+const allCards={all:[],pharma:[],cardio:[],neuro:[],micro:[],hemo:[],anatomy:[]};
+Object.keys(cardData).forEach(deck=>{
+  if(!allCards[deck]) allCards[deck]=[];
+  cardData[deck].forEach(c=>{const card={...c,deck};allCards[deck].push(card);allCards.all.push(card);});
+});
+
+
+
+// Reset session stats each time study page opens
+// ══ SPACED REPETITION ══
+const sessionResults = {};
+let difficultCards = [];
+
+function getCardKey(card){
+  const lang=card[currentLang]||card.en||card.he||{};
+  return (card.deck||'')+'::'+( lang.q||'').slice(0,40);
+}
+
+function resetSessionStats(){
+  stats.today=0;stats.total_answered=0;stats.correct=0;
+  Object.keys(sessionResults).forEach(k=>delete sessionResults[k]);
+  difficultCards=[];
+  updateStats();
+}
+
+function nextCard(rating){
+  markStudiedToday();
+  stats.today++;stats.total_answered++;
+  if(rating==='good'||rating==='easy') stats.correct++;
+  const card=currentCards[currentIdx%currentCards.length];
+  // Save SRS rating persistently
+  saveCardSRS(card, rating);
+  const key=getCardKey(card);
+  sessionResults[key]=rating;
+  if(rating==='again'||rating==='hard'){
+    if(!difficultCards.find(c=>getCardKey(c)===key)) difficultCards.push(card);
+  } else {
+    difficultCards=difficultCards.filter(c=>getCardKey(c)!==key);
+  }
+  updateStats();
+  currentIdx++;
+  if(currentIdx>=currentCards.length){showCompletionModal();currentIdx=0;renderDecks();}
+  else{loadCard(currentIdx);}
+}
+
+function startSmartDeck(deckId, deckName){
+  // Only show cards due today
+  const dueCards = getDueCards(deckId);
+  currentDeck=deckId;
+  currentCards=[...dueCards];
+  currentIdx=0;
+  resetSessionStats();
+  const sel=document.getElementById('deck-select');if(sel)sel.value=deckId;
+  document.getElementById('active-badge').textContent='✦ ⚡ '+deckName;
+  showStudyContent(true);
+  showPage('study');
+  showToast('⚡ '+(currentLang==='he'?`${dueCards.length} קלפים לחזרה`:currentLang==='it'?`${dueCards.length} carte in scadenza`:currentLang==='es'?`${dueCards.length} tarjetas pendientes`:`${dueCards.length} cards due`));
+}
+
+function showCompletionModal(){
+  const total=currentCards.length;
+  const pct=total>0?Math.round((stats.correct/total)*100):0;
+  const praises={he:['מעולה! 🎉','כל הכבוד! ⭐','פנטסטי! 🏆','מדהים! 💪','כל הכבוד לך! 🌟'],en:['Excellent! 🎉','Well done! ⭐','Fantastic! 🏆','Amazing! 💪','Great job! 🌟'],it:['Eccellente! 🎉','Bravo! ⭐','Fantastico! 🏆'],es:['¡Excelente! 🎉','¡Bien hecho! ⭐','¡Gran trabajo! 🌟'],ru:['Отлично! 🎉','Молодец! ⭐','Фантастика! 🏆']};
+  const praise=(praises[currentLang]||praises.en)[Math.floor(Math.random()*( (praises[currentLang]||praises.en).length))];
+  const pctColor=pct>=80?'#1e7a3a':pct>=60?'#c05621':'#c53030';
+  const hasDifficult=difficultCards.length>0;
+  const reviewLabels={he:'🔁 תרגל שאלות קשות',en:'🔁 Review difficult cards',it:'🔁 Ripassare difficili',es:'🔁 Repasar difíciles',ru:'🔁 Повторить трудные'};
+  const difficultSubLabels={he:`${difficultCards.length} שאלות דרושות חזרה`,en:`${difficultCards.length} cards need review`,it:`${difficultCards.length} da ripassare`,es:`${difficultCards.length} para repasar`,ru:`${difficultCards.length} для повторения`};
+  const modal=document.createElement('div');
+  modal.id='completion-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(26,42,94,.55);backdrop-filter:blur(4px);z-index:998;display:flex;align-items:center;justify-content:center;padding:24px;animation:fadeUp .3s ease;';
+  const difficultHTML=hasDifficult?`<div style="background:#fff5f5;border:1px solid rgba(197,48,48,.2);border-radius:14px;padding:16px;margin-bottom:16px;">
+    <div style="font-size:.73rem;color:#c53030;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;text-align:center;">⚠️ ${difficultSubLabels[currentLang]||difficultSubLabels.en}</div>
+    ${difficultCards.map(c=>{const lang=c[currentLang]||c.en||c.he||{};const rating=sessionResults[getCardKey(c)];return `<div style="font-size:.79rem;padding:6px 8px;background:white;border-radius:8px;margin-bottom:5px;border-right:3px solid ${rating==='again'?'#c53030':'#c05621'};">${rating==='again'?'🔴':'🟠'} ${lang.q||''}</div>`;}).join('')}
+    <button onclick="startDifficultReview();document.getElementById('completion-modal').remove();" style="width:100%;margin-top:10px;padding:10px;background:linear-gradient(135deg,#c53030,#e05050);border:none;border-radius:10px;color:white;font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;">${reviewLabels[currentLang]||reviewLabels.en}</button>
+  </div>`:'';
+  modal.innerHTML=`<div style="background:white;border-radius:24px;padding:28px 22px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(45,78,170,.25);animation:fadeUp .4s ease;max-height:90vh;overflow-y:auto;">
+    <div style="font-size:2.5rem;margin-bottom:8px;">🎓</div>
+    <div style="font-family:'Nunito',sans-serif;font-size:1.4rem;font-weight:900;color:var(--text);margin-bottom:4px;">${praise}</div>
+    <div style="font-size:.83rem;color:var(--muted);margin-bottom:18px;">${total} ${t('cards_word')} ${t('completed')}</div>
+    <div style="background:var(--accent-light);border-radius:14px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">${t('stat_pct')}</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:2.8rem;font-weight:900;color:${pctColor};">${pct}%</div>
+      <div style="font-size:.77rem;color:var(--muted);margin-top:2px;">${stats.correct} / ${total} ${t('correct_word')}</div>
+    </div>
+    ${difficultHTML}
+    <button onclick="document.getElementById('completion-modal').remove()" style="width:100%;padding:12px;background:linear-gradient(135deg,#2d4eaa,#4a6fd4);border:none;border-radius:12px;color:white;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(45,78,170,.3);">${t('keep_going')}</button>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  loadCard(currentIdx);
+}
+
+function startDifficultReview(){
+  if(!difficultCards.length)return;
+  currentCards=[...difficultCards];currentIdx=0;resetSessionStats();
+  const label={he:'🔁 חזרה על קשות',en:'🔁 Difficult Review',it:'🔁 Ripasso difficili',es:'🔁 Repaso difíciles',ru:'🔁 Трудные'};
+  document.getElementById('active-badge').textContent='✦ '+(label[currentLang]||label.en);
+  showStudyContent(true);loadCard(0);
+  showToast('🔁 '+currentCards.length+' '+(currentLang==='he'?'שאלות לחזרה':'cards to review'));
+}
+
+// ══ MANUAL CARD ══
+function toggleNewDeckInput(val){document.getElementById('new-deck-fields').style.display=val==='__new__'?'block':'none';}
+function toggleEmojiPicker(){const p=document.getElementById('emoji-picker');p.style.display=p.style.display==='flex'?'none':'flex';}
+function pickEmoji(e){document.getElementById('new-deck-emoji-display').textContent=e;document.getElementById('emoji-picker').style.display='none';}
+function createNewDeck(name,emoji){
+  const id='custom_'+Date.now();customDecks[id]={name,emoji,cards:[]};allCards[id]=[];
+  ['manual-deck','ai-deck-target','exam-deck-input'].forEach(selId=>{
+    const sel=document.getElementById(selId);if(!sel)return;
+    const newOpt=sel.querySelector('option[value="__new__"]');
+    const opt=document.createElement('option');opt.value=id;opt.textContent=emoji+' '+name;
+    if(newOpt)sel.insertBefore(opt,newOpt);else sel.appendChild(opt);
+    sel.value=id;
+  });
+  renderDecks();return id;
+}
+function addManualCard(){
+  const q=document.getElementById('manual-q').value.trim();
+  const a=document.getElementById('manual-a').value.trim();
+  let deck=document.getElementById('manual-deck').value;
+  if(!q||!a){showToast(t('toast_manual_err'));return;}
+  if(deck==='__new__'){
+    const name=document.getElementById('new-deck-name').value.trim();
+    const emoji=document.getElementById('new-deck-emoji-display').textContent;
+    if(!name){showToast(t('new_deck_err'));return;}
+    deck=createNewDeck(name,emoji);
+    document.getElementById('new-deck-fields').style.display='none';
+    document.getElementById('new-deck-name').value='';
+  }
+  const dn=deckNames();const customDeck=customDecks[deck];
+  const tag=customDeck?customDeck.emoji+' '+customDeck.name:(dn[deck]||deck).replace(/^\S+\s/,'');
+  const newCard={deck};['he','en','it','es','ru'].forEach(l=>{newCard[l]={tag,q,a};});
+  if(!allCards[deck])allCards[deck]=[];
+  allCards[deck].push(newCard);allCards.all.push(newCard);
+  updateStats();
+  const preview=document.getElementById('manual-preview');
+  preview.classList.add('visible');
+  const div=document.createElement('div');div.className='gen-card';div.style.animation='fadeUp .3s ease both';
+  div.innerHTML=`<div class="gen-card-text"><div class="gen-card-q">${q}</div><div class="gen-card-a">${a}</div></div><span style="color:var(--green);font-size:.82rem;white-space:nowrap">✓ ${tag}</span>`;
+  preview.insertBefore(div,preview.firstChild);
+  document.getElementById('manual-q').value='';document.getElementById('manual-a').value='';
+  showToast(t('toast_manual_added'));
+}
+
+// ══ FILE UPLOAD ══
+
+function handleImageUpload(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{uploadedImageBase64=e.target.result.split(',')[1];document.getElementById('image-preview').src=e.target.result;document.getElementById('image-preview-wrap').style.display='block';document.getElementById('image-drop-zone').style.display='none';};reader.readAsDataURL(file);}
+function clearImage(){uploadedImageBase64=null;document.getElementById('image-preview-wrap').style.display='none';document.getElementById('image-drop-zone').style.display='block';document.getElementById('image-file-input').value='';}
+function handleFileUpload(input){const file=input.files[0];if(!file)return;document.getElementById('file-name-label').textContent=file.name;const fw=document.getElementById('file-name-wrap');fw.style.display='flex';const reader=new FileReader();reader.onload=e=>{uploadedFileText=e.target.result;};reader.readAsText(file);}
+function clearFile(){uploadedFileText=null;document.getElementById('file-name-wrap').style.display='none';document.getElementById('pdf-file-input').value='';}
+
+// ══ CREATE TAB ══
+function switchCreateTab(tab){
+  document.getElementById('ctab-manual').classList.toggle('active',tab==='manual');
+  document.getElementById('ctab-ai').classList.toggle('active',tab==='ai');
+  document.getElementById('create-manual').style.display=tab==='manual'?'':'none';
+  document.getElementById('create-ai').style.display=tab==='ai'?'':'none';
+}
+function switchInputType(type){
+  ['text','image','file'].forEach(tp=>{document.getElementById('itype-'+tp).classList.toggle('active',tp===type);document.getElementById('input-'+tp+'-area').style.display=tp===type?'':'none';});
+}
+
+// ══ AI GENERATE ══
+// Multiple images support
+let uploadedImages = []; // array of {base64, mediaType, name}
+
+function handleImageUpload(input){
+  const files = Array.from(input.files);
+  if(!files.length) return;
+  const zone = document.getElementById('image-drop-zone');
+  const preview = document.getElementById('image-preview-wrap');
+  preview.innerHTML = '';
+  preview.style.display = 'block';
+  if(zone) zone.style.display = 'none';
+  uploadedImages = [];
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const b64 = e.target.result.split(',')[1];
+      const mediaType = file.type || 'image/jpeg';
+      uploadedImages.push({base64: b64, mediaType, name: file.name});
+      // show thumbnail
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.cssText = 'height:70px;width:auto;border-radius:8px;margin:4px;object-fit:cover;border:2px solid var(--border)';
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function clearImage(){
+  uploadedImages=[];uploadedImageBase64=null;
+  const pw=document.getElementById('image-preview-wrap');if(pw){pw.style.display='none';pw.innerHTML='';}
+  const dz=document.getElementById('image-drop-zone');if(dz)dz.style.display='block';
+  const fi=document.getElementById('image-file-input');if(fi)fi.value='';
+}
+
+async function generateCards(){
+  const activeType=document.querySelector('.input-type-btn.active')?.id?.replace('itype-','')||'text';
+  const deckTarget=document.getElementById('ai-deck-target')?.value||'pharma';
+  const btn=document.getElementById('ai-btn'),spinner=document.getElementById('spinner'),btnText=document.getElementById('btn-text');
+  btn.classList.add('loading');spinner.style.display='block';btnText.textContent=t('ai_generating');
+  try{
+    let messages;
+    const prompt = `You are a medical education expert. Analyze the provided content carefully and create exactly 5 specific flashcards based ONLY on what is actually shown/written. Each question must be directly about specific content from the source material. Return JSON only, no other text: {"cards":[{"question":"...","answer":"..."}]}`;
+    
+    if(activeType==='image' && uploadedImages.length > 0){
+      // Support multiple images
+      const contentArr = uploadedImages.map(img => ({
+        type:'image', source:{type:'base64', media_type:img.mediaType, data:img.base64}
+      }));
+      contentArr.push({type:'text', text: prompt});
+      messages=[{role:'user', content: contentArr}];
+    } else {
+      const inputText = activeType==='file' && uploadedFileText
+        ? uploadedFileText.slice(0,4000)
+        : document.getElementById('ai-input').value.trim();
+      if(!inputText){
+        document.getElementById('ai-input').focus();
+        btn.classList.remove('loading');spinner.style.display='none';btnText.textContent=t('ai_btn');
+        return;
+      }
+      messages=[{role:'user', content: prompt + '\n\nContent to analyze:\n' + inputText}];
+    }
+    
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages})
+    });
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const text=data.content.map(i=>i.text||'').join('');
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    renderGeneratedCards(parsed.cards, deckTarget);
+  }catch(e){
+    console.error('AI error:',e);
+    showToast('⚠️ ' + (e.message||'Error generating cards'));
+    btn.classList.remove('loading');spinner.style.display='none';btnText.textContent=t('ai_btn');
+    return;
+  }
+  btn.classList.remove('loading');spinner.style.display='none';btnText.textContent=t('ai_btn');
+}
+function renderGeneratedCards(cards,deckTarget){
+  const dn=deckNames();const deckLabel=dn[deckTarget]||deckTarget;
+  const c=document.getElementById('generated-cards');
+  c.innerHTML=`<div style="font-size:.78rem;color:var(--accent2);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">${t('cards_generated')} → ${deckLabel}</div>`;
+  c.classList.add('visible');
+  cards.forEach((card,i)=>{
+    const div=document.createElement('div');div.className='gen-card';div.style.animationDelay=(i*.08)+'s';
+    div.innerHTML=`<div class="gen-card-text"><div class="gen-card-q">${card.question}</div><div class="gen-card-a">${card.answer}</div></div><button class="gen-card-add" onclick="addGeneratedCard(this,'${card.question.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${card.answer.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${deckTarget}')">${t('add_card')}</button>`;
+    c.appendChild(div);
+  });
+}
+function addGeneratedCard(btn,question,answer,deck){
+  const dn=deckNames();const tag=(dn[deck]||deck).replace(/^\S+\s/,'');
+  const newCard={deck};['he','en','it','es','ru'].forEach(l=>{newCard[l]={tag,q:question,a:answer};});
+  if(!allCards[deck])allCards[deck]=[];
+  allCards[deck].push(newCard);allCards.all.push(newCard);
+  updateStats();btn.textContent=t('added');btn.classList.add('added');showToast(t('toast_added'));
+}
+
+// ══ EXPORT/IMPORT ══
+function exportDeck(deckId){
+  const dn=deckNames();const customDeck=customDecks[deckId];
+  const deckLabel=customDeck?customDeck.emoji+' '+customDeck.name:(dn[deckId]||deckId);
+  const cards=(allCards[deckId]||[]).map(c=>({he:c.he,en:c.en,it:c.it,es:c.es,ru:c.ru}));
+  const blob=new Blob([JSON.stringify({version:1,deckId,deckLabel,exportedAt:new Date().toISOString(),cards},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download='medcards_'+deckLabel.replace(/[^a-zA-Z0-9א-ת]/g,'_')+'.json';a.click();URL.revokeObjectURL(url);
+  showToast(t('share_toast'));
+}
+function triggerImport(){document.getElementById('import-file-input').click();}
+function importDeck(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.cards||!Array.isArray(data.cards))throw new Error('invalid');
+      const deckId=data.deckId||('imported_'+Date.now());
+      const deckLabel=data.deckLabel||'Imported';
+      if(!allCards[deckId])allCards[deckId]=[];
+      const builtIn=['pharma','cardio','neuro','micro','hemo','all'];
+      if(!builtIn.includes(deckId)&&!customDecks[deckId]){
+        const emoji=deckLabel.match(/^\S+/)?.[0]||'📦';const name=deckLabel.replace(/^\S+\s/,'')||deckLabel;
+        customDecks[deckId]={name,emoji,cards:[]};
+        ['manual-deck','ai-deck-target','exam-deck-input'].forEach(selId=>{
+          const sel=document.getElementById(selId);if(!sel)return;
+          const newOpt=sel.querySelector('option[value="__new__"]');
+          const opt=document.createElement('option');opt.value=deckId;opt.textContent=deckLabel;
+          if(newOpt)sel.insertBefore(opt,newOpt);else sel.appendChild(opt);
+        });
+      }
+      data.cards.forEach(c=>{const card={deck:deckId,...c};allCards[deckId].push(card);allCards.all.push(card);});
+      updateStats();renderDecks();showToast(t('import_toast')+' ('+data.cards.length+')');
+    }catch(err){showToast(t('import_err'));}
+    input.value='';
+  };reader.readAsText(file);
+}
+
+function showToast(msg){const toast=document.getElementById('toast');toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2500);}
+
+
+// ══ PERSISTENT SRS STORAGE ══
+// Storage schema:
+//   medcards_streak      → {days, last, record}
+//   medcards_card_{key}  → {nextDate, interval, ease}  (SM-2 style)
+//   medcards_progress    → {deckId: {mastered, total, lastStudied}}
+
+function store(key, val){ try{localStorage.setItem(key, JSON.stringify(val));}catch(e){} }
+function load(key, def){ try{const r=localStorage.getItem(key);return r?JSON.parse(r):def;}catch(e){return def;} }
+
+// ── STREAK ──
+function getTodayStr(){ return new Date().toISOString().split('T')[0]; }
+function loadStreakData(){ return load('medcards_streak',{days:0,last:'',record:0}); }
+function markStudiedToday(){
+  const today=getTodayStr(); let d=loadStreakData();
+  if(d.last===today) return;
+  const yest=new Date(); yest.setDate(yest.getDate()-1);
+  d.days = (d.last===yest.toISOString().split('T')[0]) ? (d.days||0)+1 : 1;
+  d.last=today; d.record=Math.max(d.record||0,d.days);
+  store('medcards_streak',d);
+  streakDays=d.days; streakRecord=Math.max(streakRecord,d.days);
+  renderHome();
+}
+function getCurrentStreak(){
+  const d=loadStreakData(); const today=getTodayStr();
+  if(!d.last) return 0; if(d.last===today) return d.days;
+  const yest=new Date(); yest.setDate(yest.getDate()-1);
+  return d.last===yest.toISOString().split('T')[0] ? d.days : 0;
+}
+const _sd = loadStreakData();
+let streakDays = getCurrentStreak();
+let streakRecord = Math.max(_sd.record||0, streakDays, 1);
+
+// ── SM-2 SPACED REPETITION ──
+// nextDate: ISO date string when card should next appear
+// interval: days until next review
+// ease: multiplier (starts at 2.5)
+function getCardSRSKey(card){
+  const lang=card[currentLang]||card.en||card.he||{};
+  return 'medcards_card_'+(card.deck||'x')+'_'+(lang.q||'').slice(0,30).replace(/\s+/g,'_');
+}
+function loadCardSRS(card){
+  return load(getCardSRSKey(card), {nextDate:'', interval:1, ease:2.5, reps:0});
+}
+function saveCardSRS(card, rating){
+  const k=getCardSRSKey(card);
+  let srs=load(k,{nextDate:'',interval:1,ease:2.5,reps:0});
+  const today=new Date(); today.setHours(0,0,0,0);
+  if(rating==='easy'){
+    srs.reps++;
+    srs.ease=Math.min(3.0, srs.ease+0.15);
+    srs.interval = srs.reps===1?1:srs.reps===2?4:Math.round(srs.interval*srs.ease);
+  } else if(rating==='good'){
+    srs.reps++;
+    srs.interval = srs.reps===1?1:srs.reps===2?3:Math.round(srs.interval*srs.ease);
+  } else if(rating==='hard'){
+    srs.ease=Math.max(1.3, srs.ease-0.15);
+    srs.interval=Math.max(1,Math.round(srs.interval*1.2));
+    srs.reps=Math.max(0,srs.reps-1);
+  } else { // again
+    srs.ease=Math.max(1.3, srs.ease-0.2);
+    srs.interval=1; srs.reps=0;
+  }
+  const next=new Date(today); next.setDate(next.getDate()+srs.interval);
+  srs.nextDate=next.toISOString().split('T')[0];
+  srs.lastRating=rating;
+  store(k, srs);
+}
+function isDueToday(card){
+  const srs=loadCardSRS(card);
+  if(!srs.nextDate) return true; // never studied
+  return srs.nextDate<=getTodayStr();
+}
+function getDueCount(deckId){
+  const cards=allCards[deckId]||[];
+  return cards.filter(c=>isDueToday(c)).length;
+}
+function getMasteredCount(deckId){
+  const cards=allCards[deckId]||[];
+  // Mastered = studied at least once with good/easy and interval>3
+  return cards.filter(c=>{
+    const srs=loadCardSRS(c);
+    return srs.reps>0 && srs.interval>3 && (srs.lastRating==='good'||srs.lastRating==='easy');
+  }).length;
+}
+
+// ── DECK PROGRESS ──
+function getDeckProgress(deckId){
+  const cards=allCards[deckId]||[];
+  if(!cards.length) return {mastered:0,total:0,pct:0,due:0};
+  const mastered=getMasteredCount(deckId);
+  const due=getDueCount(deckId);
+  return {mastered, total:cards.length, pct:Math.round(mastered/cards.length*100), due};
+}
+
+// Filter deck to only due cards for smart study
+function getDueCards(deckId){
+  const cards=allCards[deckId]||allCards.all;
+  const due=cards.filter(c=>isDueToday(c));
+  return due.length>0 ? due : cards; // fallback to all if none due
+}
+
+// ── PROGRESS BAR CSS ──
+const _style=document.createElement('style');
+_style.textContent=`
+.deck-progress-wrap{margin-top:10px;}
+.deck-progress-bar-bg{background:#edf1fb;border-radius:99px;height:6px;margin-bottom:4px;}
+.deck-progress-bar-fill{background:linear-gradient(90deg,#2d4eaa,#4a6fd4);border-radius:99px;height:6px;transition:width .6s ease;}
+.deck-progress-label{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);}
+.deck-due-badge{display:inline-block;background:#fff3cd;color:#7d5a00;border:1px solid #f6c23e;border-radius:99px;padding:2px 8px;font-size:.68rem;font-weight:600;margin-top:5px;}
+.smart-study-btn{display:block;width:100%;margin-top:7px;padding:7px;background:linear-gradient(135deg,#1e7a3a,#2ea84f);border:none;border-radius:9px;color:white;font-family:'DM Sans',sans-serif;font-size:.79rem;font-weight:600;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 7px rgba(30,122,58,.22);}
+.smart-study-btn:hover{opacity:.86;}
+`;
+document.head.appendChild(_style);
+
+// ══ CORE FUNCTIONS ══
+
+// Variables
+let currentDeck='all', currentCards=[], currentIdx=0, isFlipped=false;
+const stats={today:0,total_answered:0,correct:0};
+const customDecks={};
+let exams=[
+  {id:1,name:'פרמקולוגיה – מודול 1',date:(()=>{const d=new Date();d.setDate(d.getDate()+2);return d.toISOString().split('T')[0];})(),deck:'pharma',notes:''},
+  {id:2,name:'קרדיולוגיה בסיסית',date:(()=>{const d=new Date();d.setDate(d.getDate()+9);return d.toISOString().split('T')[0];})(),deck:'cardio',notes:''},
+  {id:3,name:'נוירולוגיה מבוא',date:(()=>{const d=new Date();d.setDate(d.getDate()+21);return d.toISOString().split('T')[0];})(),deck:'neuro',notes:''}
+];
+let uploadedImageBase64=null, uploadedFileText=null;
+
+const deckMeta=[
+  {id:'pharma',icon:'💊',count:2,due:1},
+  {id:'cardio',icon:'🫀',count:2,due:1},
+  {id:'neuro',icon:'🧠',count:2,due:1},
+  {id:'micro',icon:'🦠',count:1,due:0},
+  {id:'hemo',icon:'🩸',count:1,due:0},
+  {id:'anatomy',icon:'🦴',count:8,due:3}
+];
+
+function deckNames(){return{pharma:t('deck_pharma'),cardio:t('deck_cardio'),neuro:t('deck_neuro'),micro:t('deck_micro'),hemo:t('deck_hemo'),anatomy:t('deck_anatomy'),all:t('deck_all')};}
+
+function daysUntil(ds){const today=new Date();today.setHours(0,0,0,0);const d=new Date(ds);d.setHours(0,0,0,0);return Math.ceil((d-today)/(1000*60*60*24));}
+function urgencyClass(days){if(days<=3)return'urgent';if(days<=7)return'soon';return'normal';}
+
+// ── NAVIGATION ──
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(tb=>tb.classList.remove('active'));
+  const pg=document.getElementById('page-'+name);
+  if(pg)pg.classList.add('active');
+  const tab=document.querySelector('.tab[data-page="'+name+'"]');
+  if(tab)tab.classList.add('active');
+  if(name==='home')renderHome();
+  if(name==='study')loadCard(currentIdx);
+  if(name==='exams')renderExams();
+  if(name==='daily')renderDaily();
+  if(name==='decks')renderDecks();
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#lang-btn')&&!e.target.closest('#lang-dropdown'))
+    document.getElementById('lang-dropdown').classList.remove('open');
+  const tab=e.target.closest('.tab[data-page]');
+  if(tab)showPage(tab.getAttribute('data-page'));
+});
+
+// ── STATS ──
+function updateStats(){
+  const todayVal=stats.today;
+  const totalVal=currentCards.length||0;
+  let pctVal='--';
+  if(totalVal>0&&stats.total_answered>0){
+    const rawPct = (stats.correct/totalVal)*100;
+    pctVal = Math.min(100, Math.round(rawPct))+'%';
+  }
+  const st=document.getElementById('stat-today');if(st)st.textContent=todayVal;
+  const sT=document.getElementById('stat-total');if(sT)sT.textContent=totalVal||allCards.all.length;
+  const sP=document.getElementById('stat-pct');if(sP)sP.textContent=pctVal;
+  const ss=document.getElementById('stat-streak');if(ss)ss.textContent=streakDays;
+}
+
+// ── SHOW/HIDE STUDY ──
+function showStudyContent(show){
+  const msg=document.getElementById('no-deck-msg');
+  const cnt=document.getElementById('study-content');
+  if(msg)msg.style.display=show?'none':'block';
+  if(cnt)cnt.style.display=show?'block':'none';
+}
+
+// ── DECK NAVIGATION ──
+function startDeck(deckId,deckName){
+  currentDeck=deckId;
+  currentCards=[...(allCards[deckId]||[])];
+  currentIdx=0;
+  resetSessionStats();
+  const sel=document.getElementById('deck-select');if(sel)sel.value=deckId;
+  document.getElementById('active-badge').textContent='✦ '+deckName;
+  showStudyContent(true);
+  showPage('study');
+  showToast(t('toast_deck')+deckName);
+}
+
+function changeDeck(){
+  const val=document.getElementById('deck-select').value;
+  if(!val||val==='all'){showStudyContent(false);return;}
+  currentDeck=val;currentCards=[...allCards[val]];currentIdx=0;
+  document.getElementById('active-badge').textContent='✦ '+(deckNames()[val]||t('deck_all'));
+  resetSessionStats();showStudyContent(true);loadCard(0);
+}
+
+// ── FLASHCARD ──
+function loadCard(i){
+  isFlipped=false;
+  if(!currentCards.length)return;
+  const card=currentCards[i%currentCards.length];
+  const lang=card[currentLang]||card['en']||card['he']||{tag:'',q:'',a:''};
+  document.getElementById('flashcard').classList.remove('flipped');
+  document.getElementById('card-tag').textContent=lang.tag||'';
+  const qEl=document.getElementById('card-question');
+  if(card.img){qEl.innerHTML=`<div style="margin-bottom:8px;">${card.img}</div><span>${lang.q||''}</span>`;}
+  else{qEl.textContent=lang.q||'';}
+  document.getElementById('card-answer').textContent=lang.a||'';
+  const pos=(i%currentCards.length+1)+' / '+currentCards.length;
+  document.getElementById('card-progress').textContent=pos;
+  document.getElementById('card-progress2').textContent=pos;
+  document.getElementById('controls').style.display='none';
+  const ch=document.querySelector('.card-hint');if(ch)ch.textContent=t('card_hint');
+  const fh=document.querySelector('.flip-hint');if(fh)fh.textContent=t('flip_hint');
+}
+function flipCard(){
+  if(!isFlipped){isFlipped=true;document.getElementById('flashcard').classList.add('flipped');document.getElementById('controls').style.display='flex';}
+}
+
+// ── EXAMS ──
+function addExam(){
+  const name=document.getElementById('exam-name-input').value.trim();
+  const date=document.getElementById('exam-date-input').value;
+  const deck=document.getElementById('exam-deck-input').value;
+  const notes=document.getElementById('exam-notes-input').value.trim();
+  if(!name||!date){showToast('⚠️ '+t('fill_fields'));return;}
+  exams.push({id:Date.now(),name,date,deck,notes});
+  exams.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  document.getElementById('exam-name-input').value='';
+  document.getElementById('exam-date-input').value='';
+  document.getElementById('exam-notes-input').value='';
+  renderExams();renderDaily();renderHome();checkUrgentBanner();
+  showToast(t('toast_exam_added'));
+}
+function deleteExam(id){exams=exams.filter(e=>e.id!==id);renderExams();renderDaily();renderHome();checkUrgentBanner();}
+
+function renderExams(){
+  const list=document.getElementById('exams-list');if(!list)return;
+  if(!exams.length){list.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted);background:white;border-radius:14px;border:1px solid var(--border)"><div style="font-size:2.5rem;margin-bottom:12px">📋</div><div style="font-weight:700">${t('no_exams_title')}</div><div style="margin-top:4px;font-size:.88rem">${t('no_exams_sub')}</div></div>`;return;}
+  const dn=deckNames();
+  list.innerHTML=exams.map(ex=>{
+    const days=daysUntil(ex.date);const cls=urgencyClass(days);
+    const dStr=days<0?t('exam_passed'):days===0?t('today_label'):days+' '+t('days_left');
+    return`<div class="exam-item ${cls}"><div class="exam-countdown"><div class="exam-days-num ${cls}">${days<=0?'✓':days}</div><div class="exam-days-label">${days>0?t('days_left'):''}</div></div><div class="exam-info"><div class="exam-name">${ex.name}</div><div class="exam-meta"><span>${new Date(ex.date).toLocaleDateString()}</span><span class="exam-deck-tag">${dn[ex.deck]||ex.deck}</span>${ex.notes?`<span>${ex.notes}</span>`:''}</div></div><div class="exam-actions"><button class="exam-study-btn" onclick="startDeck('${ex.deck}','${(dn[ex.deck]||ex.deck).replace(/'/g,"\\'")}')">${t('exam_study_btn')}</button><button class="exam-delete-btn" onclick="deleteExam(${ex.id})">${t('delete_btn')}</button></div></div>`;
+  }).join('');
+}
+
+function checkUrgentBanner(){
+  const banner=document.getElementById('urgent-banner');if(!banner)return;
+  const upcoming=exams.filter(e=>{const d=daysUntil(e.date);return d>=0&&d<=3;});
+  if(upcoming.length){
+    const ex=upcoming[0];const days=daysUntil(ex.date);const dn=deckNames();
+    document.getElementById('urgent-title').textContent=`⚠️ ${dn[ex.deck]||ex.deck} – ${days===0?t('today_label'):days+' '+t('days_left')}`;
+    document.getElementById('urgent-sub').textContent=t('urgent_sub');
+    document.getElementById('urgent-go-btn').textContent=t('urgent_go');
+    banner.classList.add('show');banner._deckId=ex.deck;banner._deckName=dn[ex.deck]||ex.deck;
+  }else{banner.classList.remove('show');}
+}
+function goUrgentStudy(){const b=document.getElementById('urgent-banner');startDeck(b._deckId,b._deckName);}
+
+// ── DAILY ──
+function renderDaily(){
+  const list=document.getElementById('priority-list');if(!list)return;
+  document.getElementById('daily-title-text').textContent=t('daily_title_text');
+  const sorted=[...exams].filter(e=>daysUntil(e.date)>=0).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,4);
+  if(!sorted.length){list.innerHTML=`<div class="no-priority">${t('no_priority')}</div>`;return;}
+  const dn=deckNames();
+  list.innerHTML=sorted.map(ex=>{
+    const days=daysUntil(ex.date);const cls=urgencyClass(days);
+    const bt=cls==='urgent'?t('badge_urgent'):cls==='soon'?t('badge_soon'):t('badge_normal');
+    const cards=allCards[ex.deck]||allCards.all;
+    const daysTxt=days===0?t('today_label'):days+' '+t('days_left');
+    return`<div class="priority-item" onclick="startDeck('${ex.deck}','${(dn[ex.deck]||ex.deck).replace(/'/g,"\\'")}')"><div class="priority-icon">${ex.deck==='pharma'?'💊':ex.deck==='cardio'?'🫀':ex.deck==='neuro'?'🧠':ex.deck==='micro'?'🦠':ex.deck==='hemo'?'🩸':ex.deck==='anatomy'?'🦴':'📚'}</div><div class="priority-info"><div class="priority-name">${ex.name}</div><div class="priority-reason">${dn[ex.deck]||ex.deck} · ${cards.length} ${t('daily_cards_label')} · ${daysTxt}</div></div><span class="priority-badge badge-${cls}">${bt}</span></div>`;
+  }).join('');
+  const total=sorted.reduce((s,e)=>s+(allCards[e.deck]||allCards.all).length,0);
+  document.getElementById('daily-progress-label').textContent=`0 / ${total} ${t('daily_cards_label')}`;
+}
+function startDailySession(){
+  const upcoming=exams.filter(e=>daysUntil(e.date)>=0).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(upcoming.length){const top=upcoming[0];const dn=deckNames();startDeck(top.deck,dn[top.deck]||top.deck);}
+  else startDeck('all',t('deck_all'));
+}
+
+// ── HOME ──
+const quotes={
+  he:[{q:'הרפואה היא אמנות של ציפייה.',a:'גיא פאטין'},{q:'הרופא הטוב ביותר הוא זה שמכיר את עצמו.',a:'וולטייר'},{q:'לא חכם הוא שיודע הרבה, אלא מי שיודע מה שצריך.',a:'אסקילוס'},{q:'הצלחה היא סכום של מאמצים קטנים שחוזרים על עצמם.',a:'רוברט קוליר'},{q:'לימוד הוא האוצר שילווה את בעליו לכל מקום.',a:'חכמה סינית'},{q:'הדרך הארוכה ביותר מתחילה בצעד הראשון.',a:'לאו-צה'},{q:'כל יום ידע חדש – כל לילה מנוחה ראויה.',a:'מדעי הרפואה'}],
+  en:[{q:'The good physician treats the disease; the great physician treats the patient.',a:'William Osler'},{q:'Success is the sum of small efforts, repeated day in and day out.',a:'Robert Collier'},{q:'An investment in knowledge pays the best interest.',a:'Benjamin Franklin'},{q:'The secret of getting ahead is getting started.',a:'Mark Twain'},{q:'Wherever the art of medicine is loved, there is also love of humanity.',a:'Hippocrates'},{q:'Every day is a new beginning.',a:'Unknown'},{q:'The art of medicine consists in amusing the patient while nature cures.',a:'Voltaire'}],
+  it:[{q:'La medicina è l\'arte di mantenere l\'uomo in buona salute.',a:'Ippocrate'},{q:'La conoscenza è potere.',a:'Francis Bacon'},{q:'Non smettere mai di imparare.',a:'Anonimo'},{q:'Ogni giorno porta una nuova opportunità.',a:'Proverbio'},{q:'Chi studia medicina studia l\'umanità intera.',a:'Anonimo'},{q:'Il segreto del successo è la costanza.',a:'Disraeli'},{q:'La scienza è organizzata conoscenza.',a:'Herbert Spencer'}],
+  es:[{q:'La medicina cura al hombre, no a la enfermedad.',a:'Hipócrates'},{q:'El conocimiento es el único bien que crece cuando se comparte.',a:'Sócrates'},{q:'Nunca dejes de aprender.',a:'Anónimo'},{q:'Cada día es una nueva oportunidad.',a:'Anónimo'},{q:'El éxito es la suma de pequeños esfuerzos.',a:'Robert Collier'},{q:'La constancia es la virtud por excelencia.',a:'Evelyn Waugh'},{q:'El saber no ocupa lugar.',a:'Proverbio'}],
+  ru:[{q:'Медицина — наука о болезнях и искусство исцеления.',a:'Гиппократ'},{q:'Знание — сила.',a:'Фрэнсис Бэкон'},{q:'Успех — сумма небольших усилий.',a:'Роберт Коллиер'},{q:'Каждый день — новая возможность.',a:'Аноним'},{q:'Никогда не прекращай учиться.',a:'Аноним'},{q:'Тот, кто учится каждый день, всегда движется вперёд.',a:'Мудрость'},{q:'Наука — организованное знание.',a:'Герберт Спенсер'}]
+};
+
+function renderHome(){
+  const now=new Date();
+  const doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
+  const dateStr=now.toLocaleDateString(currentLang==='he'?'he-IL':currentLang==='ru'?'ru-RU':currentLang==='it'?'it-IT':currentLang==='es'?'es-ES':'en-GB',{weekday:'long',day:'numeric',month:'long'});
+  const de=document.getElementById('home-date');if(de)de.textContent=dateStr;
+  const langQ=quotes[currentLang]||quotes.en;const q=langQ[doy%langQ.length];
+  const qe=document.getElementById('home-quote');if(qe)qe.textContent='"'+q.q+'"';
+  const ae=document.getElementById('home-quote-attr');if(ae)ae.textContent='— '+q.a;
+  const sn=document.getElementById('streak-num');if(sn)sn.textContent=streakDays;
+  const sl=document.getElementById('streak-label-el');if(sl)sl.textContent=t('streak_label');
+  const sb=document.getElementById('streak-bar');if(sb)sb.style.width=Math.min(100,(streakDays/streakRecord)*100)+'%';
+  const rem=streakRecord-streakDays;
+  const sg=document.getElementById('streak-goal');if(sg)sg.textContent=rem>0?t('streak_goal_txt').replace('{n}',rem):t('streak_record');
+}
+
+// ── DECKS RENDER ──
+function renderDecks(){
+  const dn=deckNames();const grid=document.getElementById('decks-grid');if(!grid)return;
+  const builtIn=deckMeta.map(d=>{
+    const name=dn[d.id]||d.id;const nameOnly=name.replace(/^\S+\s/,'');
+    const cardCount=allCards[d.id]?.length||d.count;
+    const prog=getDeckProgress(d.id);
+    const dueCount=prog.due;
+    return`<div class="deck-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.8rem">${d.icon}</span>
+          <div><div class="deck-name">${nameOnly}</div>
+          <div class="deck-count"><strong style="font-size:1rem;color:var(--accent);font-family:'Nunito',sans-serif">${cardCount}</strong> ${t('cards_word')}</div></div>
+        </div>
+        <button class="deck-share-btn" style="width:auto;padding:5px 10px;margin:0" onclick="exportDeck('${d.id}')">📤</button>
+      </div>
+      <div class="deck-progress-wrap">
+        <div class="deck-progress-bar-bg"><div class="deck-progress-bar-fill" style="width:${prog.pct}%"></div></div>
+        <div class="deck-progress-label"><span>🏆 ${prog.mastered}/${prog.total} ${t('mastered_label')}</span><span>${prog.pct}%</span></div>
+        ${dueCount>0?`<span class="deck-due-badge">⏰ ${dueCount} ${t('due_label')}</span>`:''}
+      </div>
+      ${dueCount>0?`<button class="smart-study-btn" onclick="startSmartDeck('${d.id}','${name.replace(/'/g,"\\'")}')">⚡ ${t('smart_study_btn')} (${dueCount})</button>`:''}
+      <button class="deck-practice-btn" onclick="startDeck('${d.id}','${name.replace(/'/g,"\\'")}')">${t('practice_btn')}</button>
+      <div class="deck-add-row">
+        <button class="deck-add-btn" onclick="openManualAdd('${d.id}')">✏️ ${t('add_manual_short')}</button>
+        <button class="deck-add-btn primary" onclick="openAIAdd('${d.id}')">🤖 AI</button>
+      </div>
+    </div>`;
+  }).join('');
+  const custom=Object.entries(customDecks).map(([id,deck])=>{
+    const cardCount=allCards[id]?.length||0;const fullName=deck.emoji+' '+deck.name;
+    const prog=getDeckProgress(id);const dueCount=prog.due;
+    return`<div class="deck-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.8rem">${deck.emoji}</span>
+          <div><div class="deck-name">${deck.name}</div>
+          <div class="deck-count"><strong style="font-size:1rem;color:var(--accent);font-family:'Nunito',sans-serif">${cardCount}</strong> ${t('cards_word')}</div></div>
+        </div>
+        <button class="deck-share-btn" style="width:auto;padding:5px 10px;margin:0" onclick="exportDeck('${id}')">📤</button>
+      </div>
+      <div class="deck-progress-wrap">
+        <div class="deck-progress-bar-bg"><div class="deck-progress-bar-fill" style="width:${prog.pct}%"></div></div>
+        <div class="deck-progress-label"><span>🏆 ${prog.mastered}/${prog.total} ${t('mastered_label')}</span><span>${prog.pct}%</span></div>
+        ${dueCount>0?`<span class="deck-due-badge">⏰ ${dueCount} ${t('due_label')}</span>`:''}
+      </div>
+      ${dueCount>0?`<button class="smart-study-btn" onclick="startSmartDeck('${id}','${fullName.replace(/'/g,"\\'")}')" >⚡ ${t('smart_study_btn')} (${dueCount})</button>`:''}
+      <button class="deck-practice-btn" onclick="startDeck('${id}','${fullName.replace(/'/g,"\\'")}')">${t('practice_btn')}</button>
+      <div class="deck-add-row">
+        <button class="deck-add-btn" onclick="openManualAdd('${id}')">✏️ ${t('add_manual_short')}</button>
+        <button class="deck-add-btn primary" onclick="openAIAdd('${id}')">🤖 AI</button>
+      </div>
+    </div>`;
+  }).join('');
+  const newDeck=`<div class="deck-card" style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;" onclick="openAIAdd('pharma')">
+    <div style="font-size:2rem;margin-bottom:8px">✦</div>
+    <div class="deck-name" style="color:var(--accent);text-align:center">${t('new_deck')}</div>
+    <div class="deck-count" style="text-align:center">${t('with_ai')}</div>
+  </div>`;
+  grid.innerHTML=builtIn+custom+newDeck;
+}
+
+function openManualAdd(deckId){showPage('ai');switchCreateTab('manual');const sel=document.getElementById('manual-deck');if(sel)sel.value=deckId;}
+function openAIAdd(deckId){showPage('ai');switchCreateTab('ai');const sel=document.getElementById('ai-deck-target');if(sel)sel.value=deckId;}
+function startStructuredStudy(){
+  const upcoming=exams.filter(e=>daysUntil(e.date)>=0).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(!upcoming.length){showPage('decks');return;}
+  const top=upcoming[0];const dn=deckNames();startDeck(top.deck,dn[top.deck]||top.deck);
+}
+
+// ══ PERSISTENCE ══
+function saveAppState(){
+  try{
+    // Save exams
+    store('medcards_exams', exams);
+    // Save custom decks metadata
+    store('medcards_custom_decks', Object.entries(customDecks).map(([id,d])=>({id,name:d.name,emoji:d.emoji})));
+    // Save user-added cards (non-built-in)
+    const userCards = allCards.all.filter(c=>c._userAdded);
+    store('medcards_user_cards', userCards);
+    // Save today's study count
+    store('medcards_today_stats', {today: stats.today, date: getTodayStr()});
+  }catch(e){console.warn('Save failed',e);}
+}
+
+function loadAppState(){
+  try{
+    // Restore exams
+    const savedExams = load('medcards_exams', null);
+    if(savedExams && savedExams.length) exams = savedExams;
+
+    // Restore today's stats (only if same day)
+    const savedStats = load('medcards_today_stats', null);
+    if(savedStats && savedStats.date === getTodayStr()){
+      stats.today = savedStats.today || 0;
+    }
+
+    // Restore custom decks
+    const savedCustom = load('medcards_custom_decks', []);
+    savedCustom.forEach(d => {
+      if(!customDecks[d.id]){
+        customDecks[d.id] = {name:d.name, emoji:d.emoji, cards:[]};
+        if(!allCards[d.id]) allCards[d.id] = [];
+        // Add to selects
+        ['manual-deck','ai-deck-target','exam-deck-input'].forEach(selId=>{
+          const sel=document.getElementById(selId);if(!sel)return;
+          if(sel.querySelector(`option[value="${d.id}"]`)) return;
+          const newOpt=sel.querySelector('option[value="__new__"]');
+          const opt=document.createElement('option');
+          opt.value=d.id; opt.textContent=d.emoji+' '+d.name;
+          if(newOpt)sel.insertBefore(opt,newOpt);else sel.appendChild(opt);
+        });
+      }
+    });
+
+    // Restore user-added cards
+    const savedCards = load('medcards_user_cards', []);
+    savedCards.forEach(card => {
+      const deck = card.deck;
+      if(!deck) return;
+      if(!allCards[deck]) allCards[deck] = [];
+      // avoid duplicates
+      const key = getCardKey(card);
+      const exists = allCards[deck].some(c => getCardKey(c) === key);
+      if(!exists){
+        allCards[deck].push(card);
+        allCards.all.push(card);
+      }
+    });
+  }catch(e){console.warn('Load failed',e);}
+}
+
+// Auto-save on card add and exam add
+const _origAddManual = addManualCard;
+function addManualCard(){
+  _origAddManual();
+  // mark last added card as user-added
+  const last = allCards.all[allCards.all.length-1];
+  if(last) last._userAdded = true;
+  saveAppState();
+}
+
+// Save after each card rating
+const _origNextCard = nextCard;
+function nextCard(rating){
+  _origNextCard(rating);
+  saveAppState();
+}
+
+// Save after exam changes
+const _origAddExam = addExam;
+function addExam(){
+  _origAddExam();
+  saveAppState();
+}
+const _origDeleteExam = deleteExam;
+function deleteExam(id){
+  _origDeleteExam(id);
+  saveAppState();
+}
+
+// ══ INIT ══
+loadAppState();
+updateStats();
+renderHome();renderDecks();renderExams();renderDaily();checkUrgentBanner();
+document.getElementById('active-badge').textContent='✦ '+t('deck_all');
+currentCards=[];
+showStudyContent(false);
+</script>
+</body>
+</html>
